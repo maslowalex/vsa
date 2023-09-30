@@ -1,0 +1,1299 @@
+<VSA.Bar
+  Timestamp: 2023-07-09 04:59:00.000Z
+  Volume: 9.049125
+  Close Price: 1869.6
+  High: 1870.43
+  Low: 1869.6
+
+  Direction: down
+  Closed: very_low
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:00:00.000Z
+  Volume: 1.884188
+  Close Price: 1869.89
+  High: 1870.06
+  Low: 1869.73
+
+  Direction: up
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:01:00.000Z
+  Volume: 12.648103
+  Close Price: 1869.85
+  High: 1869.99
+  Low: 1869.62
+
+  Direction: down
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:02:00.000Z
+  Volume: 17.873815
+  Close Price: 1869.92
+  High: 1869.93
+  Low: 1869.84
+
+  Direction: up
+  Closed: high
+  Relative spread: narrow
+  Relative volume: average
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:03:00.000Z
+  Volume: 5.173489
+  Close Price: 1869.4
+  High: 1869.93
+  Low: 1869.4
+
+  Direction: down
+  Closed: very_low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:04:00.000Z
+  Volume: 2.004121
+  Close Price: 1869.22
+  High: 1869.36
+  Low: 1869.22
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:05:00.000Z
+  Volume: 0.454756
+  Close Price: 1869.33
+  High: 1869.34
+  Low: 1869.01
+
+  Direction: down
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:06:00.000Z
+  Volume: 2.087399
+  Close Price: 1869.96
+  High: 1869.96
+  Low: 1869.33
+
+  Direction: level
+  Closed: very_high
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:07:00.000Z
+  Volume: 10.822792
+  Close Price: 1869.96
+  High: 1869.98
+  Low: 1869.6
+
+  Direction: up
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:08:00.000Z
+  Volume: 1.891407
+  Close Price: 1869.77
+  High: 1869.83
+  Low: 1869.77
+
+  Direction: up
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:09:00.000Z
+  Volume: 0.046978
+  Close Price: 1869.6
+  High: 1869.77
+  Low: 1869.6
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:10:00.000Z
+  Volume: 7.010602
+  Close Price: 1869.98
+  High: 1869.98
+  Low: 1869.24
+
+  Direction: up
+  Closed: very_high
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:11:00.000Z
+  Volume: 1.633221
+  Close Price: 1869.7
+  High: 1869.98
+  Low: 1869.7
+
+  Direction: down
+  Closed: very_low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:12:00.000Z
+  Volume: 2.01874
+  Close Price: 1869.99
+  High: 1870
+  Low: 1869.69
+
+  Direction: down
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:13:00.000Z
+  Volume: 1.863689
+  Close Price: 1870.15
+  High: 1870.32
+  Low: 1870
+
+  Direction: down
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:14:00.000Z
+  Volume: 6.044344
+  Close Price: 1870.26
+  High: 1870.33
+  Low: 1870.19
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:15:00.000Z
+  Volume: 3.092912
+  Close Price: 1870.04
+  High: 1870.27
+  Low: 1870.02
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:16:00.000Z
+  Volume: 2.252306
+  Close Price: 1870
+  High: 1870.2
+  Low: 1870
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:17:00.000Z
+  Volume: 2.352266
+  Close Price: 1870.2
+  High: 1870.2
+  Low: 1870
+
+  Direction: down
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:18:00.000Z
+  Volume: 2.637623
+  Close Price: 1869.81
+  High: 1870.09
+  Low: 1869.8
+
+  Direction: level
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:19:00.000Z
+  Volume: 1.643719
+  Close Price: 1869.81
+  High: 1869.81
+  Low: 1869.8
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:20:00.000Z
+  Volume: 2.08227
+  Close Price: 1869.32
+  High: 1869.81
+  Low: 1869.22
+
+  Direction: up
+  Closed: low
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:21:00.000Z
+  Volume: 1.876801
+  Close Price: 1869.21
+  High: 1869.22
+  Low: 1869.21
+
+  Direction: up
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:22:00.000Z
+  Volume: 10.1855
+  Close Price: 1868.51
+  High: 1869.22
+  Low: 1868.51
+
+  Direction: up
+  Closed: very_low
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:23:00.000Z
+  Volume: 2.060269
+  Close Price: 1868.22
+  High: 1868.55
+  Low: 1868.21
+
+  Direction: down
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:24:00.000Z
+  Volume: 10.171556
+  Close Price: 1868.57
+  High: 1868.57
+  Low: 1868.01
+
+  Direction: up
+  Closed: very_high
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:25:00.000Z
+  Volume: 2.373262
+  Close Price: 1868.49
+  High: 1868.56
+  Low: 1868.23
+
+  Direction: up
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:26:00.000Z
+  Volume: 3.506859
+  Close Price: 1868.39
+  High: 1868.5
+  Low: 1868.31
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:27:00.000Z
+  Volume: 14.157132
+  Close Price: 1868.3
+  High: 1868.39
+  Low: 1868.29
+
+  Direction: down
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:28:00.000Z
+  Volume: 20.471661
+  Close Price: 1867.92
+  High: 1868.3
+  Low: 1867.61
+
+  Direction: up
+  Closed: low
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:29:00.000Z
+  Volume: 74.830926
+  Close Price: 1867.4
+  High: 1867.84
+  Low: 1867.21
+
+  Direction: down
+  Closed: low
+  Relative spread: wide
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:30:00.000Z
+  Volume: 3.466415
+  Close Price: 1867.26
+  High: 1867.41
+  Low: 1867.25
+
+  Direction: down
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:31:00.000Z
+  Volume: 6.562768
+  Close Price: 1867.43
+  High: 1867.85
+  Low: 1867.27
+
+  Direction: down
+  Closed: low
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:32:00.000Z
+  Volume: 4.980576
+  Close Price: 1867.48
+  High: 1867.65
+  Low: 1867.44
+
+  Direction: down
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:33:00.000Z
+  Volume: 9.065501
+  Close Price: 1867.59
+  High: 1867.59
+  Low: 1867.47
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:34:00.000Z
+  Volume: 11.970146
+  Close Price: 1867.56
+  High: 1867.6
+  Low: 1867.55
+
+  Direction: down
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:35:00.000Z
+  Volume: 9.219087
+  Close Price: 1868.29
+  High: 1868.29
+  Low: 1867.55
+
+  Direction: down
+  Closed: very_high
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:36:00.000Z
+  Volume: 16.140952
+  Close Price: 1868.59
+  High: 1868.6
+  Low: 1868.29
+
+  Direction: up
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:37:00.000Z
+  Volume: 0.345535
+  Close Price: 1868.3
+  High: 1868.6
+  Low: 1868.3
+
+  Direction: down
+  Closed: very_low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:38:00.000Z
+  Volume: 6.982797
+  Close Price: 1868.61
+  High: 1868.73
+  Low: 1868.51
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:39:00.000Z
+  Volume: 5.563615
+  Close Price: 1868.41
+  High: 1868.78
+  Low: 1868.41
+
+  Direction: down
+  Closed: very_low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:40:00.000Z
+  Volume: 456.309501
+  Close Price: 1870.33
+  High: 1870.34
+  Low: 1868.41
+
+  Direction: up
+  Closed: high
+  Relative spread: wide
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:41:00.000Z
+  Volume: 255.179644
+  Close Price: 1869.11
+  High: 1870.79
+  Low: 1868.89
+
+  Direction: up
+  Closed: low
+  Relative spread: wide
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:42:00.000Z
+  Volume: 3.141433
+  Close Price: 1869.01
+  High: 1869.11
+  Low: 1869
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:43:00.000Z
+  Volume: 267.558074
+  Close Price: 1867.6
+  High: 1869.03
+  Low: 1867.6
+
+  Direction: down
+  Closed: very_low
+  Relative spread: wide
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:44:00.000Z
+  Volume: 11.318614
+  Close Price: 1867.61
+  High: 1867.7
+  Low: 1867.31
+
+  Direction: down
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:45:00.000Z
+  Volume: 8.861246
+  Close Price: 1867.79
+  High: 1867.8
+  Low: 1867.57
+
+  Direction: up
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:46:00.000Z
+  Volume: 6.153688
+  Close Price: 1867.77
+  High: 1867.8
+  Low: 1867.51
+
+  Direction: level
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:47:00.000Z
+  Volume: 3.24572
+  Close Price: 1867.77
+  High: 1867.77
+  Low: 1867.76
+
+  Direction: down
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:48:00.000Z
+  Volume: 14.038138
+  Close Price: 1868.12
+  High: 1868.13
+  Low: 1867.77
+
+  Direction: up
+  Closed: high
+  Relative spread: average
+  Relative volume: average
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:49:00.000Z
+  Volume: 1.323657
+  Close Price: 1868.09
+  High: 1868.09
+  Low: 1868.08
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:50:00.000Z
+  Volume: 1.178441
+  Close Price: 1867.83
+  High: 1868.09
+  Low: 1867.71
+
+  Direction: down
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:51:00.000Z
+  Volume: 3.082447
+  Close Price: 1867.88
+  High: 1867.88
+  Low: 1867.83
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:52:00.000Z
+  Volume: 17.770137
+  Close Price: 1867.51
+  High: 1867.88
+  Low: 1867.5
+
+  Direction: level
+  Closed: low
+  Relative spread: average
+  Relative volume: average
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:53:00.000Z
+  Volume: 0.720981
+  Close Price: 1867.51
+  High: 1867.51
+  Low: 1867.5
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:54:00.000Z
+  Volume: 22.442642
+  Close Price: 1867.01
+  High: 1867.51
+  Low: 1867.01
+
+  Direction: down
+  Closed: very_low
+  Relative spread: wide
+  Relative volume: high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:55:00.000Z
+  Volume: 7.096482
+  Close Price: 1867.51
+  High: 1867.52
+  Low: 1867.02
+
+  Direction: up
+  Closed: high
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:56:00.000Z
+  Volume: 8.127755
+  Close Price: 1867.39
+  High: 1867.52
+  Low: 1867.39
+
+  Direction: up
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:57:00.000Z
+  Volume: 19.98567
+  Close Price: 1867.3
+  High: 1867.39
+  Low: 1867.26
+
+  Direction: level
+  Closed: low
+  Relative spread: narrow
+  Relative volume: high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:58:00.000Z
+  Volume: 1.018412
+  Close Price: 1867.3
+  High: 1867.3
+  Low: 1867.29
+
+  Direction: level
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 05:59:00.000Z
+  Volume: 2.174395
+  Close Price: 1867.3
+  High: 1867.3
+  Low: 1867.02
+
+  Direction: down
+  Closed: very_high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:00:00.000Z
+  Volume: 14.014918
+  Close Price: 1867.57
+  High: 1867.57
+  Low: 1867.3
+
+  Direction: up
+  Closed: very_high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:01:00.000Z
+  Volume: 9.028672
+  Close Price: 1867.38
+  High: 1867.52
+  Low: 1867.3
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:02:00.000Z
+  Volume: 7.550811
+  Close Price: 1867.4
+  High: 1867.4
+  Low: 1867.38
+
+  Direction: down
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:03:00.000Z
+  Volume: 5.625814
+  Close Price: 1867.59
+  High: 1867.6
+  Low: 1867.59
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:04:00.000Z
+  Volume: 62.356408
+  Close Price: 1868.15
+  High: 1868.15
+  Low: 1867.6
+
+  Direction: level
+  Closed: very_high
+  Relative spread: average
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:05:00.000Z
+  Volume: 1.166234
+  Close Price: 1868.15
+  High: 1868.15
+  Low: 1867.67
+
+  Direction: up
+  Closed: very_high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:06:00.000Z
+  Volume: 2.799534
+  Close Price: 1867.97
+  High: 1868.07
+  Low: 1867.84
+
+  Direction: up
+  Closed: high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:07:00.000Z
+  Volume: 5.327026
+  Close Price: 1867.58
+  High: 1867.97
+  Low: 1867.5
+
+  Direction: up
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:08:00.000Z
+  Volume: 1.426491
+  Close Price: 1867.47
+  High: 1867.69
+  Low: 1867.47
+
+  Direction: up
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:09:00.000Z
+  Volume: 6.795551
+  Close Price: 1867.45
+  High: 1867.47
+  Low: 1867.03
+
+  Direction: down
+  Closed: high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:10:00.000Z
+  Volume: 36.293926
+  Close Price: 1867.79
+  High: 1867.79
+  Low: 1867.45
+
+  Direction: up
+  Closed: very_high
+  Relative spread: average
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:11:00.000Z
+  Volume: 30.739824
+  Close Price: 1867.78
+  High: 1867.79
+  Low: 1867.78
+
+  Direction: level
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:12:00.000Z
+  Volume: 8.20719
+  Close Price: 1867.78
+  High: 1867.79
+  Low: 1867.78
+
+  Direction: level
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:13:00.000Z
+  Volume: 5.963965
+  Close Price: 1867.78
+  High: 1867.79
+  Low: 1867.78
+
+  Direction: up
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:14:00.000Z
+  Volume: 30.90574
+  Close Price: 1868
+  High: 1868
+  Low: 1867.79
+
+  Direction: down
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:15:00.000Z
+  Volume: 1.54376
+  Close Price: 1867.69
+  High: 1868.16
+  Low: 1867.53
+
+  Direction: up
+  Closed: low
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:16:00.000Z
+  Volume: 1.387096
+  Close Price: 1867.55
+  High: 1867.73
+  Low: 1867.54
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:17:00.000Z
+  Volume: 4.889069
+  Close Price: 1867
+  High: 1867.54
+  Low: 1867
+
+  Direction: down
+  Closed: very_low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:18:00.000Z
+  Volume: 12.194976
+  Close Price: 1866.99
+  High: 1867.01
+  Low: 1866.78
+
+  Direction: up
+  Closed: high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:19:00.000Z
+  Volume: 52.917281
+  Close Price: 1866.6
+  High: 1867
+  Low: 1866.31
+
+  Direction: down
+  Closed: low
+  Relative spread: wide
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:20:00.000Z
+  Volume: 7.581234
+  Close Price: 1866.52
+  High: 1866.6
+  Low: 1866.52
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:21:00.000Z
+  Volume: 6.946887
+  Close Price: 1866.93
+  High: 1866.93
+  Low: 1866.42
+
+  Direction: up
+  Closed: very_high
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:22:00.000Z
+  Volume: 4.979239
+  Close Price: 1866.73
+  High: 1867
+  Low: 1866.73
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:23:00.000Z
+  Volume: 4.379797
+  Close Price: 1866.79
+  High: 1866.8
+  Low: 1866.72
+
+  Direction: level
+  Closed: high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:24:00.000Z
+  Volume: 9.776263
+  Close Price: 1866.79
+  High: 1866.8
+  Low: 1866.73
+
+  Direction: down
+  Closed: high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:25:00.000Z
+  Volume: 9.292907
+  Close Price: 1867.52
+  High: 1867.52
+  Low: 1866.79
+
+  Direction: down
+  Closed: very_high
+  Relative spread: wide
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:26:00.000Z
+  Volume: 1.651501
+  Close Price: 1867.78
+  High: 1867.78
+  Low: 1867.52
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:27:00.000Z
+  Volume: 0.830479
+  Close Price: 1867.64
+  High: 1867.78
+  Low: 1867.64
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:28:00.000Z
+  Volume: 7.596393
+  Close Price: 1867.69
+  High: 1867.79
+  Low: 1867.64
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:29:00.000Z
+  Volume: 2.479916
+  Close Price: 1867.53
+  High: 1867.7
+  Low: 1867.53
+
+  Direction: up
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:30:00.000Z
+  Volume: 6.713373
+  Close Price: 1866.98
+  High: 1867.53
+  Low: 1866.81
+
+  Direction: level
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:31:00.000Z
+  Volume: 1.616996
+  Close Price: 1866.98
+  High: 1867.2
+  Low: 1866.97
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:32:00.000Z
+  Volume: 12.769522
+  Close Price: 1866.42
+  High: 1866.98
+  Low: 1866.41
+
+  Direction: up
+  Closed: low
+  Relative spread: average
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:33:00.000Z
+  Volume: 91.770858
+  Close Price: 1865.63
+  High: 1866.41
+  Low: 1865.61
+
+  Direction: down
+  Closed: low
+  Relative spread: average
+  Relative volume: ultra_high
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:34:00.000Z
+  Volume: 5.025467
+  Close Price: 1865.72
+  High: 1865.95
+  Low: 1865.62
+
+  Direction: down
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:35:00.000Z
+  Volume: 53.603581
+  Close Price: 1865.85
+  High: 1865.85
+  Low: 1865.62
+
+  Direction: up
+  Closed: very_high
+  Relative spread: narrow
+  Relative volume: average
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:36:00.000Z
+  Volume: 7.897218
+  Close Price: 1865.81
+  High: 1865.85
+  Low: 1865.8
+
+  Direction: up
+  Closed: low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:37:00.000Z
+  Volume: 24.346249
+  Close Price: 1865.61
+  High: 1865.81
+  Low: 1865.61
+
+  Direction: down
+  Closed: very_low
+  Relative spread: narrow
+  Relative volume: very_low
+>
+
+<VSA.Bar
+  Timestamp: 2023-07-09 06:38:00.000Z
+  Volume: 149.091103
+  Close Price: 1867.21
+  High: 1867.84
+  Low: 1865.61
+
+  Direction: 
+  Closed: 
+  Relative spread: 
+  Relative volume: 
+>
