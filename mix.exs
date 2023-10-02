@@ -23,7 +23,7 @@ defmodule Vsa.MixProject do
     [
       {:decimal, "~> 2.1"},
       {:req, "~> 0.3.10"},
-      {:jason, "~> 1.4"},
+      {:jason, "~> 1.4"}
     ]
   end
 end

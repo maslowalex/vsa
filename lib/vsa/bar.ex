@@ -8,7 +8,6 @@ defmodule VSA.Bar do
   meaning that the volume is matters **only** in relation to previous bars
 
   The properties of bar that we are interesting in is following:
-  - An interval that given bar is representing
   - Time period over which bar was captured ** We need this value in order to sort the bars
 
   - Close price
@@ -34,11 +33,10 @@ defmodule VSA.Bar do
 
   @type t :: %__MODULE__{}
 
-  @enforce_keys [:interval, :time, :close_price, :spread, :volume]
+  @enforce_keys [:time, :close_price, :spread, :volume]
   defstruct [
     :volume,
     :spread,
-    :interval,
     :time,
     :close_price,
     :direction,
@@ -47,7 +45,8 @@ defmodule VSA.Bar do
     :relative_spread,
     :relative_volume,
     :tag,
-    :closed
+    :closed,
+    :sma
   ]
 end
 
@@ -59,9 +58,10 @@ defimpl String.Chars, for: VSA.Bar do
     <VSA.Bar
       Timestamp: #{bar.time}
       Volume: #{bar.volume}
-      Close Price: #{bar.close_price}
       High: #{bar.high}
       Low: #{bar.low}
+      Close Price: #{bar.close_price}
+      SMA: #{bar.sma}
 
       Direction: #{bar.direction}
       Closed: #{bar.closed}

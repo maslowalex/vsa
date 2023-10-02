@@ -16,8 +16,8 @@ defmodule VSA do
     Enum.reduce(raw_bars, context, fn raw_bar, context ->
       context
       |> adjust_bars(raw_bar)
-      |> calc_mean_vol()
-      |> calc_mean_spread()
+      |> Context.set_mean_vol()
+      |> Context.set_mean_spread()
     end)
   end
 
@@ -37,13 +37,10 @@ defmodule VSA do
   defp fill_bar(%Context{bars: [previous_bar | _]} = ctx, raw_bar) do
     absolute_spread = absolute_spread(raw_bar)
 
-    dbg({ctx.mean_vol, DateTime.from_unix!(raw_bar.ts, :millisecond)})
-
     %Bar{
       spread: absolute_spread,
       high: raw_bar.high,
       low: raw_bar.low,
-      interval: :one_minute,
       time: DateTime.from_unix!(raw_bar.ts, :millisecond),
       close_price: raw_bar.close,
       closed: closed(absolute_spread, raw_bar),
@@ -51,6 +48,8 @@ defmodule VSA do
       direction: direction(previous_bar.close_price, raw_bar.close),
       relative_spread: relative_spread(ctx.mean_spread, absolute_spread),
       relative_volume: relative_volume(ctx.mean_vol, raw_bar.vol),
+      # Not sure it's belongs here
+      sma: Context.latest_sma(ctx, raw_bar.close),
       tag: nil
     }
   end
@@ -59,7 +58,6 @@ defmodule VSA do
     %Bar{
       high: raw_bar.high,
       low: raw_bar.low,
-      interval: :one_minute,
       time: DateTime.from_unix!(raw_bar.ts, :millisecond),
       close_price: raw_bar.close,
       volume: raw_bar.vol,
@@ -157,24 +155,6 @@ defmodule VSA do
       true ->
         :high
     end
-  end
-
-  defp calc_mean_vol(%Context{bars: []} = ctx), do: ctx
-
-  defp calc_mean_vol(%Context{bars: bars} = ctx) do
-    latest_n_bars = Enum.take(bars, ctx.bars_to_mean)
-    mean_vol = latest_n_bars |> Enum.reduce(D.new(0), &D.add(&1.volume, &2)) |> D.div(Enum.count(latest_n_bars))
-
-    %Context{ctx | mean_vol: mean_vol}
-  end
-
-  defp calc_mean_spread(%Context{bars: []} = ctx), do: ctx
-
-  defp calc_mean_spread(%Context{bars: bars} = ctx) do
-    latest_n_bars = Enum.take(bars, ctx.bars_to_mean)
-    mean_spread = latest_n_bars |> Enum.reduce(D.new(0), &D.add(&1.spread, &2)) |> D.div(Enum.count(latest_n_bars))
-
-    %Context{ctx | mean_spread: mean_spread}
   end
 end
 

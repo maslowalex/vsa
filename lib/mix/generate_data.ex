@@ -38,7 +38,9 @@ defmodule Mix.Tasks.GenerateData do
     second_chunk_data = Map.fetch!(second_chunk.body, "data")
     second_chunk_latest_ts = second_chunk_data |> Enum.at(-1) |> Enum.at(0)
 
-    Mix.shell().info("Second chunk latest timestamp: #{human_readable_ts(second_chunk_latest_ts)}")
+    Mix.shell().info(
+      "Second chunk latest timestamp: #{human_readable_ts(second_chunk_latest_ts)}"
+    )
 
     data_2 = generate_data(second_chunk_data)
 
