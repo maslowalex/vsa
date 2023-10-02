@@ -1,5 +1,14 @@
 defmodule VSA.Context do
-  defstruct trend: :flat, min_bars: 100, bars: [], mean_vol: 0.0, mean_spread: 0.0
+  @moduledoc """
+  While experimenting with the input values, I find out that:
+
+  *bars_to_mean* should be 12,
+  *max_bars* should be 100
+
+  This is close enough to reproduce the average volume shown by original VSA indicator
+  """
+
+  defstruct trend: :flat, max_bars: 100, bars_to_mean: 12, bars: [], mean_vol: 0.0, mean_spread: 0.0
 
   alias Decimal, as: D
   alias VSA.Context

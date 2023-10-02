@@ -25,7 +25,7 @@ defmodule VSA do
     filled_bar = fill_bar(ctx, raw_bar)
 
     bars =
-      if length(bars) === ctx.min_bars do
+      if length(bars) === ctx.max_bars do
         [filled_bar | List.delete_at(bars, -1)]
       else
         [filled_bar | bars]
@@ -36,6 +36,8 @@ defmodule VSA do
 
   defp fill_bar(%Context{bars: [previous_bar | _]} = ctx, raw_bar) do
     absolute_spread = absolute_spread(raw_bar)
+
+    dbg({ctx.mean_vol, DateTime.from_unix!(raw_bar.ts, :millisecond)})
 
     %Bar{
       spread: absolute_spread,
@@ -107,10 +109,6 @@ defmodule VSA do
     end
   end
 
-  defp do_closed(ratio) when ratio > @mid_high and ratio <= @high_close, do: :high
-  defp do_closed(ratio) when ratio > @high_close, do: :very_high
-  defp do_closed(_), do: :low
-
   defp direction(eq, eq), do: :level
   defp direction(prev, current) when current < prev, do: :down
   defp direction(_, _), do: :up
@@ -164,7 +162,8 @@ defmodule VSA do
   defp calc_mean_vol(%Context{bars: []} = ctx), do: ctx
 
   defp calc_mean_vol(%Context{bars: bars} = ctx) do
-    mean_vol = bars |> Enum.reduce(D.new(0), &D.add(&1.volume, &2)) |> D.div(Enum.count(bars))
+    latest_n_bars = Enum.take(bars, ctx.bars_to_mean)
+    mean_vol = latest_n_bars |> Enum.reduce(D.new(0), &D.add(&1.volume, &2)) |> D.div(Enum.count(latest_n_bars))
 
     %Context{ctx | mean_vol: mean_vol}
   end
@@ -172,7 +171,8 @@ defmodule VSA do
   defp calc_mean_spread(%Context{bars: []} = ctx), do: ctx
 
   defp calc_mean_spread(%Context{bars: bars} = ctx) do
-    mean_spread = bars |> Enum.reduce(D.new(0), &D.add(&1.spread, &2)) |> D.div(Enum.count(bars))
+    latest_n_bars = Enum.take(bars, ctx.bars_to_mean)
+    mean_spread = latest_n_bars |> Enum.reduce(D.new(0), &D.add(&1.spread, &2)) |> D.div(Enum.count(latest_n_bars))
 
     %Context{ctx | mean_spread: mean_spread}
   end
