@@ -5,7 +5,7 @@ defmodule Mix.Tasks.GenerateData do
   @requirements ["app.start"]
 
   @endpoint "https://www.okx.com/api/v5/market/history-candles"
-  @attributes [:ts, :open, :high, :low, :close, :vol, :volCcy, :confirm]
+  @attributes [:ts, :open, :high, :low, :close, :vol, :volCcy, :volCcyQuote, :confirm]
 
   @impl Mix.Task
   def run(args) do

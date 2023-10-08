@@ -21,17 +21,35 @@ defmodule VSA do
     end)
   end
 
+  defp adjust_bars(%Context{bars: [%Bar{tag: tag} = bar_to_confirm | tail_bars]} = ctx, raw_bar)
+       when not is_nil(tag) do
+    maybe_confirmed_bar = VSA.Indicator.confirm(bar_to_confirm, raw_bar.close)
+    bars = [maybe_confirmed_bar | tail_bars]
+    ctx = %Context{ctx | bars: bars}
+
+    maybe_tagged_bar =
+      ctx
+      |> fill_bar(raw_bar)
+      |> then(fn filled_bar -> VSA.Indicator.assign(ctx, filled_bar) end)
+
+    %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
+  end
+
   defp adjust_bars(%Context{bars: bars} = ctx, raw_bar) do
-    filled_bar = fill_bar(ctx, raw_bar)
+    maybe_tagged_bar =
+      ctx
+      |> fill_bar(raw_bar)
+      |> then(fn filled_bar -> VSA.Indicator.assign(ctx, filled_bar) end)
 
-    bars =
-      if length(bars) === ctx.max_bars do
-        [filled_bar | List.delete_at(bars, -1)]
-      else
-        [filled_bar | bars]
-      end
+    %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
+  end
 
-    %Context{ctx | bars: bars}
+  defp preserve_bars_length(max_bars, bars, incoming_bar) do
+    if length(bars) === max_bars do
+      [incoming_bar | List.delete_at(bars, -1)]
+    else
+      [incoming_bar | bars]
+    end
   end
 
   defp fill_bar(%Context{bars: [previous_bar | _]} = ctx, raw_bar) do
@@ -44,6 +62,7 @@ defmodule VSA do
       time: DateTime.from_unix!(raw_bar.ts, :millisecond),
       close_price: raw_bar.close,
       closed: closed(absolute_spread, raw_bar),
+      opened: opened(absolute_spread, raw_bar),
       volume: raw_bar.vol,
       direction: direction(previous_bar.close_price, raw_bar.close),
       relative_spread: relative_spread(ctx.mean_spread, absolute_spread),
@@ -88,10 +107,24 @@ defmodule VSA do
   defp closed(abs_spread, %{close: c, low: l}) do
     abs_spread
     |> D.div(D.sub(c, l))
-    |> do_closed()
+    |> compare_with_ratio()
   end
 
-  defp do_closed(ratio) do
+  defp opened(_, %{open: o, low: o}) do
+    :very_low
+  end
+
+  defp opened(_, %{high: h, close: h}) do
+    :very_high
+  end
+
+  defp opened(abs_spread, %{open: o, low: l}) do
+    abs_spread
+    |> D.div(D.sub(o, l))
+    |> compare_with_ratio()
+  end
+
+  defp compare_with_ratio(ratio) do
     cond do
       D.gt?(ratio, @mid_low) and D.lt?(ratio, @mid_high) ->
         :middle
@@ -108,8 +141,14 @@ defmodule VSA do
   end
 
   defp direction(eq, eq), do: :level
-  defp direction(prev, current) when current < prev, do: :down
-  defp direction(_, _), do: :up
+
+  defp direction(prev, current) do
+    if D.gt?(current, prev) do
+      :up
+    else
+      :down
+    end
+  end
 
   defp absolute_spread(%{low: l, high: h}) do
     D.sub(h, l)

@@ -22,13 +22,13 @@ defmodule VSA.Bar do
   - Tag that we are assigning to that bar in VSA terms,
     it could be one of following:
       - PS (Potential professional selling). This tag is assigned to an UP bar with ultra-high relative volume and a wide spread
-        the next bar is must close **lower** than given bar.
+        the next bar is must close **lower** than given bar. Background is up-trend.
       - PB (Potential professional buying). This tag is assigned to a DOWN bar with ultra-high relative volume and a wide spread
-        the next bar is must close **higher** than given bar.
-      - Upthrust. This tag is assigned to a DOWN OR LEVEL bar with the ultra-high relative volume, the spread is tight.
-      - Shakeout. This tag is assigned to the UP OR LEVEL bar with the ultra-high relative volume, the spread is tight.
-      - No demand. This tag is assigned to the DOWN bar, the volume beign ultra-low with the medium to tight spread.
-      - Test. This tag is assigned to the UP bar, the volume of which is ultra-low with the medium to tight spread.
+        the next bar is must close **higher** than given bar. Background is down-trend.
+      - Upthrust. This tag is assigned to a DOWN OR LEVEL bar with the high or ultra-high relative volume, the spread is tight.
+      - Shakeout. This tag is assigned to the UP OR LEVEL bar with the high or ultra-high relative volume, the spread is tight.
+      - No demand. This tag is assigned to the DOWN bar, the volume beign ultra-low and lower then previous two bars, with the medium to tight spread.
+      - Test. This tag is assigned to the UP bar, the volume of which is ultra-low and lower then previous two bars, with the medium to tight spread.
   """
 
   @type t :: %__MODULE__{}
@@ -46,6 +46,7 @@ defmodule VSA.Bar do
     :relative_volume,
     :tag,
     :closed,
+    :opened,
     :sma
   ]
 end
@@ -53,7 +54,26 @@ end
 defimpl String.Chars, for: VSA.Bar do
   def to_string(nil), do: ""
 
-  def to_string(bar) do
+  def to_string(%{tag: nil} = bar) do
+    """
+    <VSA.Bar
+      Timestamp: #{bar.time}
+      Volume: #{bar.volume}
+      High: #{bar.high}
+      Low: #{bar.low}
+      Close Price: #{bar.close_price}
+      SMA: #{bar.sma}
+
+      Direction: #{bar.direction}
+      Closed: #{bar.closed}
+      Opened: #{bar.opened}
+      Relative spread: #{bar.relative_spread}
+      Relative volume: #{bar.relative_volume}
+    >
+    """
+  end
+
+  def to_string(%{tag: tag} = bar) do
     """
     <VSA.Bar
       Timestamp: #{bar.time}
@@ -67,6 +87,8 @@ defimpl String.Chars, for: VSA.Bar do
       Closed: #{bar.closed}
       Relative spread: #{bar.relative_spread}
       Relative volume: #{bar.relative_volume}
+
+      Tag: #{tag}
     >
     """
   end
