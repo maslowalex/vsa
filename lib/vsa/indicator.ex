@@ -9,7 +9,7 @@ defmodule VSA.Indicator do
   alias VSA.Context
 
   def confirm(%Bar{tag: tag} = bar_to_confirm, next_bar_close_price)
-      when tag in [:shakeout, :test] do
+      when tag in [:shakeout, :test, :professional_buying] do
     if D.gt?(next_bar_close_price, bar_to_confirm.close_price) do
       bar_to_confirm
     else
@@ -18,7 +18,7 @@ defmodule VSA.Indicator do
   end
 
   def confirm(%Bar{tag: tag} = bar_to_confirm, next_bar_close_price)
-      when tag in [:no_demand, :upthrust] do
+      when tag in [:no_demand, :upthrust, :professional_selling] do
     if D.lt?(next_bar_close_price, bar_to_confirm.close_price) do
       bar_to_confirm
     else
@@ -29,6 +29,28 @@ defmodule VSA.Indicator do
   @doc """
   Assigns an indicator to the given bar.
   """
+  def assign(
+        %Context{volume_extreme: volume_extreme},
+        %Bar{relative_volume: :ultra_high, direction: :down} = current
+      ) do
+    if D.gt?(current.volume, volume_extreme) || D.eq?(current.volume, volume_extreme) do
+      %Bar{current | tag: :professional_buying}
+    else
+      current
+    end
+  end
+
+  def assign(
+        %Context{volume_extreme: volume_extreme},
+        %Bar{relative_volume: :ultra_high, direction: :up} = current
+      ) do
+    if D.gt?(current.volume, volume_extreme) || D.eq?(current.volume, volume_extreme) do
+      %Bar{current | tag: :professional_selling}
+    else
+      current
+    end
+  end
+
   def assign(
         %Context{bars: [_previous, _penultimate | _]} = ctx,
         %Bar{relative_volume: v, direction: :down, relative_spread: :narrow} = current

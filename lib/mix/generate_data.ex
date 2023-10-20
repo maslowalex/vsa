@@ -5,25 +5,30 @@ defmodule Mix.Tasks.GenerateData do
   @requirements ["app.start"]
 
   @endpoint "https://www.okx.com/api/v5/market/history-candles"
-  @attributes [:ts, :open, :high, :low, :close, :vol, :volCcy, :volCcyQuote, :confirm]
+  @attributes [:ts, :open, :high, :low, :close, :volCcyQuote, :volCcy, :vol, :confirm]
 
   @impl Mix.Task
   def run(args) do
-    [instrument] = args
+    {parsed, _} = OptionParser.parse!(args, strict: [instrument: :string, bar: :string])
 
-    Mix.shell().info("Will generate test data for #{instrument}, 1 minute TF.")
+    instrument = parsed[:instrument]
+    bar = parsed[:bar]
+
+    Mix.shell().info("Will generate test data for #{instrument}, #{bar} TF.")
 
     directory = make_current_date_directory!()
-    data = fetch_data!(instrument)
-    filename = Path.join([directory, "#{instrument}-#{current_timestamp()}.ex"])
+    data = fetch_data!(instrument, bar)
+    filename = Path.join([directory, "#{instrument}-#{bar}-#{current_timestamp()}.ex"])
+    results = Path.join([directory, "results-#{instrument}-#{bar}-#{current_timestamp()}.txt"])
 
-    File.write!(filename, :erlang.term_to_binary(data))
+    :ok = File.write!(filename, :erlang.term_to_binary(data))
+    Generator.call(filename, results)
 
     Mix.shell().info("Writed a file: #{filename}")
   end
 
-  defp fetch_data!(instrument) do
-    response = Req.get!(@endpoint <> "?instId=#{instrument}")
+  defp fetch_data!(instrument, bar) do
+    response = Req.get!(@endpoint <> "?instId=#{instrument}&bar=#{bar}")
 
     response_body_data = Map.fetch!(response.body, "data")
 
@@ -33,7 +38,8 @@ defmodule Mix.Tasks.GenerateData do
 
     Mix.shell().info("First chunk latest timestamp: #{human_readable_ts(latest_ts)}")
 
-    second_chunk = Req.get!(@endpoint <> "?instId=#{instrument}" <> "&after=#{latest_ts}")
+    second_chunk =
+      Req.get!(@endpoint <> "?instId=#{instrument}" <> "&after=#{latest_ts}" <> "&bar=#{bar}")
 
     second_chunk_data = Map.fetch!(second_chunk.body, "data")
     second_chunk_latest_ts = second_chunk_data |> Enum.at(-1) |> Enum.at(0)

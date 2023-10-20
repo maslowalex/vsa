@@ -18,6 +18,7 @@ defmodule VSA do
       |> adjust_bars(raw_bar)
       |> Context.set_mean_vol()
       |> Context.set_mean_spread()
+      |> Context.maybe_set_volume_extreme()
     end)
   end
 
@@ -67,9 +68,9 @@ defmodule VSA do
       direction: direction(previous_bar.close_price, raw_bar.close),
       relative_spread: relative_spread(ctx.mean_spread, absolute_spread),
       relative_volume: relative_volume(ctx.mean_vol, raw_bar.vol),
+      tag: nil,
       # Not sure it's belongs here
-      sma: Context.latest_sma(ctx, raw_bar.close),
-      tag: nil
+      sma: Context.latest_sma(ctx, raw_bar.close)
     }
   end
 
@@ -126,7 +127,7 @@ defmodule VSA do
 
   defp compare_with_ratio(ratio) do
     cond do
-      D.gt?(ratio, @mid_low) and D.lt?(ratio, @mid_high) ->
+      D.lt?(ratio, @mid_low) and D.gt?(ratio, @mid_high) ->
         :middle
 
       D.gt?(ratio, @high_close) ->
@@ -174,6 +175,9 @@ defmodule VSA do
   @low_volume_factor D.new("1.25")
   @average_volume_factor D.new("0.88")
   @high_volume_factor D.new("0.6")
+  @zero D.new("0")
+
+  defp relative_volume(_mean_volume, @zero), do: :very_low
 
   defp relative_volume(mean_volume, volume) do
     factor = D.div(mean_volume, volume)

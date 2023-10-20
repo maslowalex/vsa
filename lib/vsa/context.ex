@@ -14,15 +14,21 @@ defmodule VSA.Context do
   This is close enough to reproduce the average volume shown by original VSA indicator
   """
 
+  # TODO
+  # Keep track of the max and low extremes of price.
   defstruct trend: :flat,
             max_bars: 100,
             bars_to_mean: 12,
             bars: [],
-            mean_vol: 0.0,
-            mean_spread: 0.0
+            mean_vol: Decimal.new(0),
+            mean_spread: Decimal.new(0),
+            volume_extreme: Decimal.new(0),
+            volume_extreme_set_bars_ago: 0
 
   alias Decimal, as: D
   alias VSA.Context
+
+  @bars_to_extreme_reset 20
 
   def set_mean_vol(%Context{} = ctx, []), do: ctx
 
@@ -49,6 +55,29 @@ defmodule VSA.Context do
 
     %Context{ctx | mean_spread: mean_spread}
   end
+
+  def maybe_set_volume_extreme(
+        %Context{
+          bars: [%VSA.Bar{relative_volume: :ultra_high, volume: v} | _],
+          volume_extreme_set_bars_ago: volume_extreme_set_bars_ago
+        } = ctx
+      )
+      when volume_extreme_set_bars_ago <= @bars_to_extreme_reset do
+    if Decimal.gt?(v, ctx.volume_extreme) do
+      %Context{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+    else
+      %Context{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
+    end
+  end
+
+  def maybe_set_volume_extreme(
+        %Context{bars: [%VSA.Bar{relative_volume: :ultra_high, volume: v} | _]} = ctx
+      ) do
+    %Context{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+  end
+
+  def maybe_set_volume_extreme(ctx),
+    do: %Context{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
 
   def latest_sma(%Context{bars: []}, _), do: nil
 
