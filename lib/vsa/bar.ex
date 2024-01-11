@@ -47,13 +47,12 @@ defmodule VSA.Bar do
     :tag,
     :closed,
     :opened,
-    :sma
+    :sma,
+    :finished
   ]
 end
 
 defimpl String.Chars, for: VSA.Bar do
-  def to_string(nil), do: ""
-
   def to_string(%{tag: nil} = bar) do
     """
     <VSA.Bar

@@ -13,17 +13,27 @@ defmodule VSA do
   """
   @spec analyze(list(VSA.Bar.t())) :: list(VSA.Bar.t())
   def analyze(raw_bars, context \\ %Context{}) when is_list(raw_bars) do
-    Enum.reduce(raw_bars, context, fn raw_bar, context ->
-      context
-      |> adjust_bars(raw_bar)
-      |> Context.set_mean_vol()
-      |> Context.set_mean_spread()
-      |> Context.maybe_set_volume_extreme()
-    end)
+    Enum.reduce(raw_bars, context, &do_analyze/2)
   end
 
-  defp adjust_bars(%Context{bars: [%Bar{tag: tag} = bar_to_confirm | tail_bars]} = ctx, raw_bar)
-       when not is_nil(tag) do
+  def analyze(raw_bar, context) when is_map(raw_bar) do
+    do_analyze(raw_bar, context)
+  end
+
+  defp do_analyze(raw_bar, context) do
+    context
+    |> add_raw_bar(raw_bar)
+    |> Context.set_mean_vol()
+    |> Context.set_mean_spread()
+    |> Context.maybe_set_volume_extreme()
+    |> Context.maybe_set_price_extreme()
+  end
+
+  def add_raw_bar(
+        %Context{bars: [%Bar{tag: tag, finished: true} = bar_to_confirm | tail_bars]} = ctx,
+        raw_bar
+      )
+      when not is_nil(tag) do
     maybe_confirmed_bar = VSA.Indicator.confirm(bar_to_confirm, raw_bar.close)
     bars = [maybe_confirmed_bar | tail_bars]
     ctx = %Context{ctx | bars: bars}
@@ -36,7 +46,7 @@ defmodule VSA do
     %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
   end
 
-  defp adjust_bars(%Context{bars: bars} = ctx, raw_bar) do
+  def add_raw_bar(%Context{bars: bars} = ctx, raw_bar) do
     maybe_tagged_bar =
       ctx
       |> fill_bar(raw_bar)
@@ -70,7 +80,8 @@ defmodule VSA do
       relative_volume: relative_volume(ctx.mean_vol, raw_bar.vol),
       tag: nil,
       # Not sure it's belongs here
-      sma: Context.latest_sma(ctx, raw_bar.close)
+      sma: Context.latest_sma(ctx, raw_bar.close),
+      finished: raw_bar.finished
     }
   end
 
@@ -97,6 +108,10 @@ defmodule VSA do
   @mid_high D.new("1.8")
   @very_high_close D.new("1.35")
 
+  defp closed(@zero_dot_zero, _) do
+    :middle
+  end
+
   defp closed(_, %{close: c, low: c}) do
     :very_low
   end
@@ -109,6 +124,10 @@ defmodule VSA do
     abs_spread
     |> D.div(D.sub(c, l))
     |> compare_with_ratio()
+  end
+
+  defp opened(@zero_dot_zero, _) do
+    :middle
   end
 
   defp opened(_, %{open: o, low: o}) do
@@ -158,6 +177,9 @@ defmodule VSA do
   @wide_spread_factor D.new("1.5")
   @narrow_spread_factor D.new("0.7")
 
+  defp relative_spread(@zero_dot_zero, _), do: :narrow
+  defp relative_spread(_, @zero_dot_zero), do: :narrow
+
   defp relative_spread(mean_spread, spread) do
     cond do
       D.gt?(spread, D.mult(@wide_spread_factor, mean_spread)) ->
@@ -176,8 +198,9 @@ defmodule VSA do
   @average_volume_factor D.new("0.88")
   @high_volume_factor D.new("0.6")
   @zero D.new("0")
+  @zero_dot_zero Decimal.new("0E-8")
 
-  defp relative_volume(_mean_volume, @zero), do: :very_low
+  defp relative_volume(_mean_volume, @zero_dot_zero), do: :very_low
 
   defp relative_volume(mean_volume, volume) do
     factor = D.div(mean_volume, volume)

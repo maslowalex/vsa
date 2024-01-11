@@ -66,7 +66,7 @@ defmodule Mix.Tasks.GenerateData do
               {x, Decimal.new(y)}
           end
         )
-        |> Enum.into(%{}))
+        |> Enum.into(%{finished: true}))
     )
   end
 

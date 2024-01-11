@@ -30,10 +30,10 @@ defmodule VSA.Indicator do
   Assigns an indicator to the given bar.
   """
   def assign(
-        %Context{volume_extreme: volume_extreme},
-        %Bar{relative_volume: :ultra_high, direction: :down} = current
+        %Context{volume_extreme: volume_extreme, price_low: extreme_low},
+        %Bar{relative_volume: :ultra_high, direction: :down, close_price: close_price} = current
       ) do
-    if D.gt?(current.volume, volume_extreme) || D.eq?(current.volume, volume_extreme) do
+    if D.compare(current.volume, volume_extreme) in [:gt, :eq] or D.lt?(close_price, extreme_low)  do
       %Bar{current | tag: :professional_buying}
     else
       current
@@ -41,10 +41,10 @@ defmodule VSA.Indicator do
   end
 
   def assign(
-        %Context{volume_extreme: volume_extreme},
-        %Bar{relative_volume: :ultra_high, direction: :up} = current
+        %Context{volume_extreme: volume_extreme, price_high: extreme_high},
+        %Bar{relative_volume: :ultra_high, direction: :up, close_price: close_price} = current
       ) do
-    if D.gt?(current.volume, volume_extreme) || D.eq?(current.volume, volume_extreme) do
+    if D.compare(current.volume, volume_extreme) in [:gt, :eq] or D.gt?(close_price, extreme_high) do
       %Bar{current | tag: :professional_selling}
     else
       current
@@ -56,7 +56,8 @@ defmodule VSA.Indicator do
         %Bar{relative_volume: v, direction: :down, relative_spread: :narrow} = current
       )
       when v in [:low, :very_low] do
-    if volume_lower_then_previous_two_bars?(ctx, current) do
+    if volume_lower_then_previous_two_bars?(ctx, current) or
+         close_lower_than_previous_two_bars?(ctx, current) do
       %Bar{current | tag: :test}
     else
       current
@@ -68,7 +69,8 @@ defmodule VSA.Indicator do
         %Bar{relative_volume: v, direction: :up, relative_spread: :narrow} = current
       )
       when v in [:low, :very_low] do
-    if volume_lower_then_previous_two_bars?(ctx, current) do
+    if volume_lower_then_previous_two_bars?(ctx, current) or
+         close_higher_than_previous_two_bars?(ctx, current) do
       %Bar{current | tag: :no_demand}
     else
       current
@@ -101,5 +103,17 @@ defmodule VSA.Indicator do
          volume: volume
        }) do
     D.lt?(volume, previous.volume) && D.lt?(volume, penultimate.volume)
+  end
+
+  defp close_lower_than_previous_two_bars?(%Context{bars: [previous, penultimate | _]}, %Bar{
+         close_price: close_price
+       }) do
+    D.lt?(close_price, previous.close_price) && D.lt?(close_price, penultimate.close_price)
+  end
+
+  defp close_higher_than_previous_two_bars?(%Context{bars: [previous, penultimate | _]}, %Bar{
+         close_price: close_price
+       }) do
+    D.gt?(close_price, previous.close_price) && D.gt?(close_price, penultimate.close_price)
   end
 end
