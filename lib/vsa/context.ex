@@ -87,12 +87,18 @@ defmodule VSA.Context do
   def latest_sma(%Context{bars: []}, _), do: nil
 
   def latest_sma(%Context{bars: bars}, incoming_close_price) do
-    prices = [incoming_close_price | Enum.map(bars, & &1.close_price)]
-
-    VSA.Sma.latest(prices)
+    VSA.SMA.latest(bars, incoming_close_price)
   end
 
-  def maybe_set_price_extreme(%Context{price_high: @zero, price_low: @zero, bars: [bar | _]} = ctx) do
+  def latest_ema(%Context{bars: []}, _), do: nil
+
+  def latest_ema(%Context{bars: bars}, incoming_close_price) do
+    VSA.EMA.latest(bars, incoming_close_price)
+  end
+
+  def maybe_set_price_extreme(
+        %Context{price_high: @zero, price_low: @zero, bars: [bar | _]} = ctx
+      ) do
     %Context{ctx | price_high: bar.close_price, price_low: bar.close_price}
   end
 
@@ -115,7 +121,7 @@ defmodule VSA.Context do
     end
   end
 
-  def maybe_set_price_extreme(%Context{bars: [%VSA.Bar{close_price: close_price} | _]} = ctx) do
+  def maybe_set_price_extreme(%Context{} = ctx) do
     %Context{ctx | price_extreme_set_bars_ago: 0}
   end
 end

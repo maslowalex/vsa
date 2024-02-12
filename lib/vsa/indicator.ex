@@ -33,7 +33,7 @@ defmodule VSA.Indicator do
         %Context{volume_extreme: volume_extreme, price_low: extreme_low},
         %Bar{relative_volume: :ultra_high, direction: :down, close_price: close_price} = current
       ) do
-    if D.compare(current.volume, volume_extreme) in [:gt, :eq] or D.lt?(close_price, extreme_low)  do
+    if D.compare(current.volume, volume_extreme) in [:gt, :eq] or D.lt?(close_price, extreme_low) do
       %Bar{current | tag: :professional_buying}
     else
       current

@@ -29,6 +29,8 @@ defmodule VSA.Bar do
       - Shakeout. This tag is assigned to the UP OR LEVEL bar with the high or ultra-high relative volume, the spread is tight.
       - No demand. This tag is assigned to the DOWN bar, the volume beign ultra-low and lower then previous two bars, with the medium to tight spread.
       - Test. This tag is assigned to the UP bar, the volume of which is ultra-low and lower then previous two bars, with the medium to tight spread.
+
+  - Trend (up, down, flat) we use the EMA and SMA to determine the trend
   """
 
   @type t :: %__MODULE__{}
@@ -47,7 +49,9 @@ defmodule VSA.Bar do
     :tag,
     :closed,
     :opened,
+    :ema,
     :sma,
+    :trend,
     :finished
   ]
 end
@@ -62,6 +66,8 @@ defimpl String.Chars, for: VSA.Bar do
       Low: #{bar.low}
       Close Price: #{bar.close_price}
       SMA: #{bar.sma}
+      EMA: #{bar.ema}
+      Trend: #{bar.trend}
 
       Direction: #{bar.direction}
       Closed: #{bar.closed}
@@ -81,6 +87,8 @@ defimpl String.Chars, for: VSA.Bar do
       Low: #{bar.low}
       Close Price: #{bar.close_price}
       SMA: #{bar.sma}
+      EMA: #{bar.ema}
+      Trend: #{bar.trend}
 
       Direction: #{bar.direction}
       Closed: #{bar.closed}

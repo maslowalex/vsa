@@ -9,10 +9,12 @@ defmodule VSA do
   alias Decimal, as: D
 
   @doc """
-  Analyze the collection of %VSA.Bar{} and annotates it with VSA-specific values
+  Analyze the collection of %VSA.RawBar{} and annotates it with VSA-specific values
   """
   @spec analyze(list(VSA.Bar.t())) :: list(VSA.Bar.t())
-  def analyze(raw_bars, context \\ %Context{}) when is_list(raw_bars) do
+  def analyze(raw_bars, context \\ %Context{})
+
+  def analyze(raw_bars, context) when is_list(raw_bars) do
     Enum.reduce(raw_bars, context, &do_analyze/2)
   end
 
@@ -65,6 +67,10 @@ defmodule VSA do
 
   defp fill_bar(%Context{bars: [previous_bar | _]} = ctx, raw_bar) do
     absolute_spread = absolute_spread(raw_bar)
+    latest_ema = Context.latest_ema(ctx, raw_bar.close)
+    latest_sma = Context.latest_sma(ctx, raw_bar.close)
+
+    trend = VSA.Trend.evaluate(ctx, Decimal.to_float(raw_bar.close), latest_sma, latest_ema)
 
     %Bar{
       spread: absolute_spread,
@@ -80,7 +86,9 @@ defmodule VSA do
       relative_volume: relative_volume(ctx.mean_vol, raw_bar.vol),
       tag: nil,
       # Not sure it's belongs here
-      sma: Context.latest_sma(ctx, raw_bar.close),
+      sma: latest_sma,
+      ema: latest_ema,
+      trend: trend,
       finished: raw_bar.finished
     }
   end
@@ -106,7 +114,7 @@ defmodule VSA do
   @high_close D.new("2")
   @mid_low D.new("2.2")
   @mid_high D.new("1.8")
-  @very_high_close D.new("1.35")
+  @zero_dot_zero Decimal.new("0E-8")
 
   defp closed(@zero_dot_zero, _) do
     :middle
@@ -197,8 +205,6 @@ defmodule VSA do
   @low_volume_factor D.new("1.25")
   @average_volume_factor D.new("0.88")
   @high_volume_factor D.new("0.6")
-  @zero D.new("0")
-  @zero_dot_zero Decimal.new("0E-8")
 
   defp relative_volume(_mean_volume, @zero_dot_zero), do: :very_low
 
