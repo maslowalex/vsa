@@ -28,12 +28,17 @@ defmodule VSA.Context do
             volume_extreme_set_bars_ago: 0,
             price_high: @zero,
             price_low: @zero,
-            price_extreme_set_bars_ago: 0
+            price_extreme_set_bars_ago: 0,
+            setup: nil
 
   alias Decimal, as: D
   alias VSA.Context
 
   @bars_to_extreme_reset 20
+
+  def maybe_capture_setup(%Context{} = context) do
+    %Context{context | setup: VSA.Setup.capture(context)}
+  end
 
   def set_mean_vol(%Context{} = ctx, []), do: ctx
 

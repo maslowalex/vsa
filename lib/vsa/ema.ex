@@ -5,7 +5,7 @@ defmodule VSA.EMA do
   Courtesy of Indicado library.
   """
 
-  @period 11
+  @period 9
 
   def latest([%{ema: nil} | _] = bars, incoming_close_price) do
     bars = [
