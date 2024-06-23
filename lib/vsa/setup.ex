@@ -36,7 +36,20 @@ defmodule VSA.Setup do
         bars: [%Bar{tag: :test} = test_bar | _],
         setup: %VSA.Setup{principle: :professional_buying} = setup
       }) do
-    if Decimal.compare(test_bar.close_price, setup.high) in [:gt, :eq] do
+    if Decimal.gt?(test_bar.close_price, setup.high) do
+      bar = take_essential_bar_info(test_bar)
+
+      %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
+    else
+      setup
+    end
+  end
+
+  def capture(%Context{
+        bars: [%Bar{tag: :unconfirmed_test} = test_bar | _],
+        setup: %VSA.Setup{principle: :professional_selling} = setup
+      }) do
+    if Decimal.lt?(test_bar.close_price, setup.low) do
       bar = take_essential_bar_info(test_bar)
 
       %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
@@ -58,7 +71,20 @@ defmodule VSA.Setup do
         bars: [%Bar{tag: :no_demand} = no_demand_bar | _],
         setup: %VSA.Setup{principle: :professional_selling} = setup
       }) do
-    if Decimal.compare(no_demand_bar.close_price, setup.low) in [:gt, :eq] do
+    if Decimal.lt?(no_demand_bar.close_price, setup.low) do
+      bar = take_essential_bar_info(no_demand_bar)
+
+      %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
+    else
+      setup
+    end
+  end
+
+  def capture(%Context{
+        bars: [%Bar{tag: :unconfirmed_no_demand} = no_demand_bar | _],
+        setup: %VSA.Setup{principle: :professional_buying} = setup
+      }) do
+    if Decimal.gt?(no_demand_bar.close_price, setup.high) do
       bar = take_essential_bar_info(no_demand_bar)
 
       %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
@@ -79,6 +105,6 @@ defmodule VSA.Setup do
   def capture(%Context{setup: setup}), do: setup
 
   defp take_essential_bar_info(bar) do
-    Map.take(bar, [:tag, :close_price, :relative_volume, :relative_spread])
+    Map.take(bar, [:tag, :close_price, :volume, :time, :relative_volume, :relative_spread])
   end
 end

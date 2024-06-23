@@ -7,15 +7,13 @@ defmodule VSA.Trend do
   Closing price
   """
 
-  alias VSA.Context
-
   def evaluate(_, _close, sma, ema) when is_nil(sma) or is_nil(ema), do: :flat
 
   def evaluate(_, close, sma, ema) when close >= sma and ema >= sma, do: :up
 
   def evaluate(_, close, sma, ema) when close <= sma and ema <= sma, do: :down
 
-  def evaluate(_, close, sma, ema), do: :flat
+  def evaluate(_, _close, _sma, _ema), do: :flat
 
   # def evaluate(%Context{bars: [%{trend: :down} | _]}, close, sma, ema)
   #   when sma >= ema,

@@ -28,7 +28,8 @@ defmodule VSA do
     |> Context.set_mean_vol()
     |> Context.set_mean_spread()
     |> Context.maybe_set_volume_extreme()
-    |> Context.maybe_set_price_extreme()
+    |> Context.maybe_set_price_high_extreme()
+    |> Context.maybe_set_price_low_extreme()
     |> Context.maybe_capture_setup()
   end
 
@@ -161,7 +162,7 @@ defmodule VSA do
       D.gt?(ratio, @high_close) ->
         :low
 
-      D.lt?(ratio, @mid_high) ->
+      D.lt?(ratio, @high_close) ->
         :high
 
       true ->
@@ -209,7 +210,7 @@ defmodule VSA do
 
   defp relative_volume(_mean_volume, @zero_dot_zero), do: :very_low
 
-  defp relatime_volume(@zero_dot_zero, _), do: :average
+  defp relative_volume(@zero_dot_zero, _), do: :average
 
   defp relative_volume(mean_volume, volume) do
     factor = D.div(mean_volume, volume)
