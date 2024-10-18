@@ -6,3 +6,8 @@ Test the implementation by running:
 ```bash
 mix generate_data --instrument=BTC-USDT --bar=1m
 ```
+
+## TODO
+
+- [ ] Add tests
+- [ ] Add 'two bar reversal'
