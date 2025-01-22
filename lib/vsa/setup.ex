@@ -9,11 +9,13 @@ defmodule VSA.Setup do
   alias VSA.Bar
   alias VSA.Context
 
+  @derive JSON.Encoder
   defstruct [
     :principle,
     :volume,
     :high,
     :low,
+    :inception_time,
     confirmations: []
   ]
 
@@ -28,7 +30,8 @@ defmodule VSA.Setup do
       principle: climactic_action,
       volume: climactic_bar.volume,
       high: climactic_bar.high,
-      low: climactic_bar.low
+      low: climactic_bar.low,
+      inception_time: climactic_bar.time
     }
   end
 

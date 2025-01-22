@@ -117,18 +117,11 @@ defmodule VSA do
   @mid_low D.new("2.2")
   @mid_high D.new("1.8")
   @zero_dot_zero Decimal.new("0E-8")
+  @zero Decimal.new(0)
 
-  defp closed(@zero_dot_zero, _) do
-    :middle
-  end
-
-  defp closed(_, %{close: c, low: c}) do
-    :very_low
-  end
-
-  defp closed(_, %{high: h, close: h}) do
-    :very_high
-  end
+  defp closed(@zero_dot_zero, _), do: :middle
+  defp closed(_, %{close: c, low: c}), do: :very_low
+  defp closed(_, %{high: h, close: h}), do: :very_high
 
   defp closed(abs_spread, %{close: c, low: l}) do
     abs_spread
@@ -208,9 +201,9 @@ defmodule VSA do
   @average_volume_factor D.new("0.88")
   @high_volume_factor D.new("0.6")
 
-  defp relative_volume(_mean_volume, @zero_dot_zero), do: :very_low
+  defp relative_volume(_mean_volume, z) when z in [@zero, @zero_dot_zero], do: :very_low
 
-  defp relative_volume(@zero_dot_zero, _), do: :average
+  defp relative_volume(z, _) when z in [@zero, @zero_dot_zero], do: :average
 
   defp relative_volume(mean_volume, volume) do
     factor = D.div(mean_volume, volume)

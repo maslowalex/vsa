@@ -18,6 +18,7 @@ defmodule VSA.Context do
   # Keep track of the max and low extremes of price.
   @zero Decimal.new(0)
 
+  @derive JSON.Encoder
   defstruct trend: :flat,
             max_bars: 200,
             bars_to_mean: 50,

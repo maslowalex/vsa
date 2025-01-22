@@ -35,6 +35,7 @@ defmodule VSA.Bar do
 
   @type t :: %__MODULE__{}
 
+  @derive JSON.Encoder
   @enforce_keys [:time, :close_price, :spread, :volume]
   defstruct [
     :volume,
