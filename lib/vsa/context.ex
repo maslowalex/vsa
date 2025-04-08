@@ -15,7 +15,6 @@ defmodule VSA.Context do
   """
 
   # TODO
-  # Keep track of the max and low extremes of price.
   @zero Decimal.new(0)
 
   @derive JSON.Encoder
@@ -112,24 +111,19 @@ defmodule VSA.Context do
           bars: [%VSA.Bar{close_price: close_price} | _],
           price_high_set_bars_ago: price_high_set_bars_ago
         } = ctx
-      )
-      when price_high_set_bars_ago <= @bars_to_extreme_reset do
+      ) do
     if Decimal.gt?(close_price, ctx.price_high) do
       %Context{ctx | price_high: close_price, price_high_set_bars_ago: 0}
     else
-      %Context{ctx | price_high_set_bars_ago: ctx.price_high_set_bars_ago + 1}
+      %Context{ctx | price_high_set_bars_ago: price_high_set_bars_ago + 1}
     end
   end
 
-  def maybe_set_price_high_extreme(%Context{bars: bars} = ctx) do
-    %Context{
-      ctx
-      | price_high_set_bars_ago: 0,
-        price_high: fetch_price_extreme(bars, :high)
-    }
+  def maybe_set_price_high_extreme(ctx) do
+    ctx
   end
 
-  def maybe_set_price_low_extreme(%Context{price_high: @zero, bars: bars} = ctx) do
+  def maybe_set_price_low_extreme(%Context{price_low: @zero, bars: bars} = ctx) do
     %Context{ctx | price_low: fetch_price_extreme(bars, :low)}
   end
 
@@ -138,18 +132,15 @@ defmodule VSA.Context do
           bars: [%VSA.Bar{close_price: close_price} | _],
           price_low_set_bars_ago: price_low_set_bars_ago
         } = ctx
-      )
-      when price_low_set_bars_ago <= @bars_to_extreme_reset do
+      ) do
     if Decimal.lt?(close_price, ctx.price_low) do
       %Context{ctx | price_low: close_price, price_low_set_bars_ago: 0}
     else
-      %Context{ctx | price_low_set_bars_ago: ctx.price_low_set_bars_ago + 1}
+      %Context{ctx | price_low_set_bars_ago: price_low_set_bars_ago + 1}
     end
   end
 
-  def maybe_set_price_low_extreme(%Context{} = ctx) do
-    %Context{ctx | price_low_set_bars_ago: 0, price_low: fetch_price_extreme(ctx.bars, :low)}
-  end
+  def maybe_set_price_low_extreme(ctx), do: ctx
 
   def fetch_price_extreme(bars, :high) do
     bars
@@ -159,6 +150,7 @@ defmodule VSA.Context do
 
   def fetch_price_extreme(bars, :low) do
     bars
+    |> Enum.reject(&Decimal.eq?(&1.close_price, "0"))
     |> Enum.min_by(& &1.close_price, Decimal)
     |> Map.fetch!(:close_price)
   end

@@ -4,7 +4,7 @@ defmodule Vsa.MixProject do
   def project do
     [
       app: :vsa,
-      version: "0.1.2",
+      version: "0.1.4",
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
