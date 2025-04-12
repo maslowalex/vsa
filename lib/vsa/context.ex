@@ -14,6 +14,8 @@ defmodule VSA.Context do
   This is close enough to reproduce the average volume shown by original VSA indicator
   """
 
+  alias VSA.SwingDetector
+
   # TODO
   @zero Decimal.new(0)
 
@@ -30,7 +32,8 @@ defmodule VSA.Context do
             price_low: @zero,
             price_low_set_bars_ago: 0,
             price_high_set_bars_ago: 0,
-            setup: nil
+            setup: nil,
+            swing_detector: SwingDetector.new(25)
 
   alias Decimal, as: D
   alias VSA.Context
@@ -153,5 +156,13 @@ defmodule VSA.Context do
     |> Enum.reject(&Decimal.eq?(&1.close_price, "0"))
     |> Enum.min_by(& &1.close_price, Decimal)
     |> Map.fetch!(:close_price)
+  end
+
+  def update_swing_detector(%Context{} = ctx, raw_candle) do
+    %Context{ctx | swing_detector: SwingDetector.add_candle(ctx.swing_detector, raw_candle)}
+  end
+
+  def set_trend(%Context{} = ctx) do
+    %Context{ctx | trend: SwingDetector.extract_trend(ctx.swing_detector)}
   end
 end

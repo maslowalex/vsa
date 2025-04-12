@@ -13,7 +13,8 @@ defmodule VSA.SetupTest do
         principle: :professional_buying,
         volume: bar.volume,
         high: bar.high,
-        low: bar.low
+        low: bar.low,
+        inception_time: bar.time
       }
     end
 
@@ -26,7 +27,8 @@ defmodule VSA.SetupTest do
         principle: :professional_selling,
         volume: bar.volume,
         high: bar.high,
-        low: bar.low
+        low: bar.low,
+        inception_time: bar.time
       }
     end
 

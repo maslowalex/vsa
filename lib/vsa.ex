@@ -25,6 +25,8 @@ defmodule VSA do
   defp do_analyze(raw_bar, context) do
     context
     |> add_raw_bar(raw_bar)
+    |> Context.update_swing_detector(raw_bar)
+    |> Context.set_trend()
     |> Context.set_mean_vol()
     |> Context.set_mean_spread()
     |> Context.maybe_set_volume_extreme()

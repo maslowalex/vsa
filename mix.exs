@@ -4,7 +4,7 @@ defmodule Vsa.MixProject do
   def project do
     [
       app: :vsa,
-      version: "0.1.4",
+      version: "0.2.0",
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -28,7 +28,9 @@ defmodule Vsa.MixProject do
     [
       {:decimal, "~> 2.1"},
       {:req, "~> 0.5.8", optional: true},
-      {:talib, "~> 0.3.6"}
+      {:talib, "~> 0.3.6"},
+      {:nx, "~> 0.9.2"},
+      {:nimble_csv, "~> 1.2", runtime: false}
     ]
   end
 end

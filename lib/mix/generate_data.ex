@@ -21,36 +21,44 @@ defmodule Mix.Tasks.GenerateData do
     filename = Path.join([directory, "#{instrument}-#{bar}-#{current_timestamp()}.ex"])
     results = Path.join([directory, "results-#{instrument}-#{bar}-#{current_timestamp()}.txt"])
 
+    Mix.shell().info("Samples count: #{length(data)}")
+
     :ok = File.write!(filename, :erlang.term_to_binary(data))
     Generator.call(filename, results)
 
     Mix.shell().info("Writed a file: #{filename}")
   end
 
-  defp fetch_data!(instrument, bar) do
-    response = Req.get!(@endpoint <> "?instId=#{instrument}&bar=#{bar}")
+  defp fetch_data!(instrument, bar, number_of_requests \\ 5) do
+    Enum.reduce(0..number_of_requests, {[], nil}, fn
+      _, {[], nil} ->
+        response = Req.get!(@endpoint <> "?instId=#{instrument}&bar=#{bar}")
 
-    response_body_data = Map.fetch!(response.body, "data")
+        response_body_data = Map.fetch!(response.body, "data")
 
-    data = generate_data(response_body_data)
+        data = generate_data(response_body_data)
 
-    latest_ts = response_body_data |> Enum.at(-1) |> Enum.at(0)
+        latest_ts = response_body_data |> Enum.at(-1) |> Enum.at(0)
 
-    Mix.shell().info("First chunk latest timestamp: #{human_readable_ts(latest_ts)}")
+        Mix.shell().info("First chunk latest timestamp: #{human_readable_ts(latest_ts)}")
 
-    second_chunk =
-      Req.get!(@endpoint <> "?instId=#{instrument}" <> "&after=#{latest_ts}" <> "&bar=#{bar}")
+        {data, latest_ts}
 
-    second_chunk_data = Map.fetch!(second_chunk.body, "data")
-    second_chunk_latest_ts = second_chunk_data |> Enum.at(-1) |> Enum.at(0)
+      _, {data, latest_ts} ->
+        next_chunk =
+          Req.get!(@endpoint <> "?instId=#{instrument}" <> "&after=#{latest_ts}" <> "&bar=#{bar}")
 
-    Mix.shell().info(
-      "Second chunk latest timestamp: #{human_readable_ts(second_chunk_latest_ts)}"
-    )
+        data_2 = Map.fetch!(next_chunk.body, "data")
+        latest_ts = data_2 |> Enum.at(-1) |> Enum.at(0)
 
-    data_2 = generate_data(second_chunk_data)
+        Mix.shell().info("Second chunk latest timestamp: #{human_readable_ts(latest_ts)}")
 
-    (data ++ data_2) |> Enum.reverse()
+        data_2 = generate_data(data_2)
+
+        {data ++ data_2, latest_ts}
+    end)
+    |> elem(0)
+    |> Enum.reverse()
   end
 
   defp generate_data(response_data) do

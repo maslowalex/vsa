@@ -35,7 +35,8 @@ defmodule VSA.Fixtures do
       volume: volume,
       high: high,
       low: low,
-      close_price: close_price
+      close_price: close_price,
+      time: ~N[2025-10-01 12:00:00]
     }
 
     context(bars: [bar(bar_fields)], mean_vol: mean_volume, price_high: price_high, price_low: price_low)
