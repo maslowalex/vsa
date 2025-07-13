@@ -3,6 +3,7 @@ defmodule VSA.SwingDetector.TrendAnalyzer do
   Analyzes swing points to identify trends in market data.
   """
 
+  @derive JSON.Encoder
   defmodule Trend do
     @moduledoc """
     Represents a detected trend in the market.

@@ -33,7 +33,7 @@ defmodule VSA.Context do
             price_low_set_bars_ago: 0,
             price_high_set_bars_ago: 0,
             setup: nil,
-            swing_detector: SwingDetector.new(25)
+            swing_detector: SwingDetector.new(15)
 
   alias Decimal, as: D
   alias VSA.Context

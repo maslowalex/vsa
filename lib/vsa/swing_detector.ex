@@ -26,31 +26,23 @@ defmodule VSA.SwingDetector do
   @doc """
   Returns the closest swing point and distance to it.
   """
-  def closest_swing(detector, direction) when direction in [:high, :low] do
-    recent_highs_and_lows = get_latest_swing_points(detector)
+  def closest_swing(%SwingDetector{swing_highs: [most_recent_high | _]}, :high) do
+    {idx, price} = most_recent_high
 
-    case {direction, recent_highs_and_lows} do
-      {:high, %{highs: []}} ->
-        {:error, :no_swing_highs_found}
+    distance = detector.current_index - idx
 
-      {:low, %{lows: []}} ->
-        {:error, :no_swing_lows_found}
-
-      {:high, %{highs: [closest_high | _]}} ->
-        {idx, price} = closest_high
-        # Get the closest high and its distance from the current index
-        distance = detector.current_index - idx
-
-        {:ok, distance, price}
-
-      {:low, %{lows: [closest_low | _]}} ->
-        {idx, price} = closest_low
-        # Get the closest low and its distance from the current index
-        distance = detector.current_index - idx
-
-        {:ok, distance, price}
-    end
+    {:ok, {price, distance}}
   end
+
+  def closest_swing(%SwingDetector{swing_lows: [most_recent_low | _]}, :low) do
+    {idx, price} = most_recent_low
+
+    distance = detector.current_index - idx
+
+    {:ok, {price, distance}}
+  end
+
+  def closest_swing(_, _), do: {:error, :no_swing_points}
 
   @doc """
   Creates a new swing detector with the given lookback period.

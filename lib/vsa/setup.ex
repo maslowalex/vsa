@@ -15,6 +15,7 @@ defmodule VSA.Setup do
     :volume,
     :high,
     :low,
+    :close,
     :inception_time,
     confirmations: []
   ]
@@ -31,6 +32,7 @@ defmodule VSA.Setup do
       volume: climactic_bar.volume,
       high: climactic_bar.high,
       low: climactic_bar.low,
+      close: climactic_bar.close_price,
       inception_time: climactic_bar.time
     }
   end
@@ -108,6 +110,6 @@ defmodule VSA.Setup do
   def capture(%Context{setup: setup}), do: setup
 
   defp take_essential_bar_info(bar) do
-    Map.take(bar, [:tag, :close_price, :volume, :time, :relative_volume, :relative_spread])
+    Map.take(bar, [:tag, :close_price, :high, :low, :volume, :time, :relative_volume, :relative_spread])
   end
 end
