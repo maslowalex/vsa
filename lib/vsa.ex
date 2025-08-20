@@ -40,14 +40,16 @@ defmodule VSA do
         raw_bar
       )
       when not is_nil(tag) do
-    maybe_confirmed_bar = VSA.Indicator.confirm(bar_to_confirm, raw_bar.close)
-    bars = [maybe_confirmed_bar | tail_bars]
-    ctx = %Context{ctx | bars: bars}
-
+    # First fill and tag the new bar
     maybe_tagged_bar =
       ctx
       |> fill_bar(raw_bar)
       |> then(fn filled_bar -> VSA.Indicator.assign(ctx, filled_bar) end)
+
+    # Then confirm the previous bar with the new bar's close price
+    maybe_confirmed_bar = VSA.Indicator.confirm(bar_to_confirm, raw_bar.close)
+    bars = [maybe_confirmed_bar | tail_bars]
+    ctx = %Context{ctx | bars: bars}
 
     %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
   end
@@ -108,70 +110,54 @@ defmodule VSA do
     }
   end
 
-  # CHECK LATER
-  # This values is from github gist by some dude, probably those values are make no sense
-  #
-  # very_high_close_bar = bar_range < 1.35
-  # high_close_bar = bar_range < 2
-  # mid_close_bar = (bar_range < 2.2) & (bar_range > 1.8)
-  # down_close_bar = bar_range > 2
-  @high_close D.new("2")
-  @mid_low D.new("2.2")
-  @mid_high D.new("1.8")
-  @zero_dot_zero Decimal.new("0E-8")
-  @zero Decimal.new(0)
+  # Constants for close/open position calculations
+  # Renamed for clarity
+  # Above 70% of range
+  @position_high_threshold D.new("0.7")
+  # Below 30% of range
+  @position_low_threshold D.new("0.3")
+  @zero D.new(0)
 
-  defp closed(@zero_dot_zero, _), do: :middle
-  defp closed(_, %{close: c, low: c}), do: :very_low
-  defp closed(_, %{high: h, close: h}), do: :very_high
+  defp closed(abs_spread, _) when abs_spread == @zero, do: :middle
+  defp closed(_, %{close: c, low: l}) when c == l, do: :very_low
+  defp closed(_, %{high: h, close: c}) when c == h, do: :very_high
 
   defp closed(abs_spread, %{close: c, low: l}) do
-    abs_spread
-    |> D.div(D.sub(c, l))
-    |> compare_with_ratio()
-  end
+    # Calculate normalized position (0 to 1) where close is within the range
+    position = D.div(D.sub(c, l), abs_spread)
 
-  defp opened(@zero_dot_zero, _) do
-    :middle
-  end
-
-  defp opened(_, %{open: o, low: o}) do
-    :very_low
-  end
-
-  defp opened(_, %{high: h, close: h}) do
-    :very_high
-  end
-
-  defp opened(abs_spread, %{open: o, low: l}) do
-    abs_spread
-    |> D.div(D.sub(o, l))
-    |> compare_with_ratio()
-  end
-
-  defp compare_with_ratio(ratio) do
     cond do
-      D.lt?(ratio, @mid_low) and D.gt?(ratio, @mid_high) ->
-        :middle
-
-      D.gt?(ratio, @high_close) ->
-        :low
-
-      D.lt?(ratio, @high_close) ->
-        :high
-
-      true ->
-        :very_high
+      D.lt?(position, @position_low_threshold) -> :low
+      D.gt?(position, @position_high_threshold) -> :high
+      true -> :middle
     end
   end
 
-  defp direction(eq, eq), do: :level
+  defp opened(abs_spread, _) when abs_spread == @zero, do: :middle
+
+  # Check if bar has open field
+  defp opened(_, raw_bar) when not is_map_key(raw_bar, :open), do: :middle
+
+  defp opened(_, %{open: o, low: l}) when o == l, do: :very_low
+  # Fixed: checking open == high
+  defp opened(_, %{high: h, open: o}) when o == h, do: :very_high
+
+  defp opened(abs_spread, %{open: o, low: l}) do
+    # Calculate normalized position (0 to 1) where open is within the range
+    position = D.div(D.sub(o, l), abs_spread)
+
+    cond do
+      D.lt?(position, @position_low_threshold) -> :low
+      D.gt?(position, @position_high_threshold) -> :high
+      true -> :middle
+    end
+  end
 
   defp direction(prev, current) do
-    if D.gt?(current, prev) do
-      :up
-    else
-      :down
+    cond do
+      D.eq?(prev, current) -> :level
+      D.gt?(current, prev) -> :up
+      true -> :down
     end
   end
 
@@ -182,8 +168,8 @@ defmodule VSA do
   @wide_spread_factor D.new("1.5")
   @narrow_spread_factor D.new("0.7")
 
-  defp relative_spread(@zero_dot_zero, _), do: :narrow
-  defp relative_spread(_, @zero_dot_zero), do: :narrow
+  defp relative_spread(mean_spread, _) when mean_spread == @zero, do: :narrow
+  defp relative_spread(_, spread) when spread == @zero, do: :narrow
 
   defp relative_spread(mean_spread, spread) do
     cond do
@@ -198,44 +184,38 @@ defmodule VSA do
     end
   end
 
-  @very_low_volume_factor D.new("3")
-  @low_volume_factor D.new("1.25")
-  @average_volume_factor D.new("0.88")
-  @high_volume_factor D.new("0.6")
+  # Fixed volume factors - now using volume/mean_volume ratio
+  # Volume > 2x average
+  @ultra_high_volume_factor D.new("2.0")
+  # Volume > 1.5x average
+  @high_volume_factor D.new("1.5")
+  # Volume < 0.5x average
+  @low_volume_factor D.new("0.5")
+  # Volume < 0.25x average
+  @very_low_volume_factor D.new("0.25")
 
-  defp relative_volume(_mean_volume, z) when z in [@zero, @zero_dot_zero], do: :very_low
-
-  defp relative_volume(z, _) when z in [@zero, @zero_dot_zero], do: :average
+  defp relative_volume(_, volume) when volume == @zero, do: :very_low
+  defp relative_volume(mean_volume, _) when mean_volume == @zero, do: :average
 
   defp relative_volume(mean_volume, volume) do
-    factor = D.div(mean_volume, volume)
+    # Fixed: Now correctly calculating volume ratio (volume/mean_volume)
+    ratio = D.div(volume, mean_volume)
 
     cond do
-      D.gt?(factor, @low_volume_factor) ->
-        :very_low
-
-      D.lt?(factor, @high_volume_factor) ->
+      D.gt?(ratio, @ultra_high_volume_factor) ->
         :ultra_high
 
-      D.lt?(factor, @very_low_volume_factor) and D.gt?(factor, @average_volume_factor) ->
-        :average
+      D.gt?(ratio, @high_volume_factor) ->
+        :high
 
-      D.gt?(factor, @average_volume_factor) and D.lt?(factor, @very_low_volume_factor) ->
+      D.lt?(ratio, @very_low_volume_factor) ->
+        :very_low
+
+      D.lt?(ratio, @low_volume_factor) ->
         :low
 
       true ->
-        :high
+        :average
     end
   end
 end
-
-# %{
-#   close: 30091.7,
-#   high: 30120.0,
-#   low: 30052.8,
-#   open: 30115.4,
-#   confirm: 3891883.95989609,
-#   ts: 1687972500000.0,
-#   vol: 129.34263388,
-#   volCcy: 3891883.95989609
-# }

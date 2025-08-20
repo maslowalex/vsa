@@ -16,7 +16,6 @@ defmodule VSA.Context do
 
   alias VSA.SwingDetector
 
-  # TODO
   @zero Decimal.new(0)
 
   @derive JSON.Encoder
