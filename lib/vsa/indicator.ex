@@ -1,6 +1,6 @@
-defmodule VSA.Indicator do
+defmodule Vsa.Tag do
   @moduledoc """
-  Module that is responsible to assign an indicator to individual bar.
+  Module that is responsible to assign an a tag to individual bar.
   """
 
   alias Decimal, as: D
@@ -27,7 +27,7 @@ defmodule VSA.Indicator do
   end
 
   @doc """
-  Assigns an indicator to the given bar.
+  Assigns an a tag to the given bar.
   """
   def assign(
         %Context{volume_extreme: volume_extreme, price_low: extreme_low},

@@ -5,22 +5,11 @@ defmodule VSA.Context do
 
   So we would like to get the average volume and spread over the given period of time,
   and recalculate those values on each new bar.
-
-  While experimenting with the input values, I find out that:
-
-  *bars_to_mean* should be 12,
-  *max_bars* should be 100
-
-  This is close enough to reproduce the average volume shown by original VSA indicator
   """
-
-  alias VSA.SwingDetector
-
   @zero Decimal.new(0)
 
   @derive JSON.Encoder
-  defstruct trend: :flat,
-            max_bars: 200,
+  defstruct max_bars: 200,
             bars_to_mean: 50,
             bars: [],
             mean_vol: @zero,
@@ -31,13 +20,12 @@ defmodule VSA.Context do
             price_low: @zero,
             price_low_set_bars_ago: 0,
             price_high_set_bars_ago: 0,
-            setup: nil,
-            swing_detector: SwingDetector.new(25)
+            setup: nil
 
   alias Decimal, as: D
   alias VSA.Context
 
-  @bars_to_extreme_reset 200
+  @bars_to_extreme_reset Application.compile_env(:vsa, :bars_to_extreme_reset, 200)
 
   def maybe_capture_setup(%Context{} = context) do
     %Context{context | setup: VSA.Setup.capture(context)}
@@ -50,7 +38,7 @@ defmodule VSA.Context do
 
     mean_vol =
       latest_n_bars
-      |> Enum.reduce(D.new(0), &D.add(&1.volume, &2))
+      |> Enum.reduce(@zero, &D.add(&1.volume, &2))
       |> D.div(Enum.count(latest_n_bars))
 
     %Context{ctx | mean_vol: mean_vol}
@@ -63,7 +51,7 @@ defmodule VSA.Context do
 
     mean_spread =
       latest_n_bars
-      |> Enum.reduce(D.new(0), &D.add(&1.spread, &2))
+      |> Enum.reduce(@zero, &D.add(&1.spread, &2))
       |> D.div(Enum.count(latest_n_bars))
 
     %Context{ctx | mean_spread: mean_spread}
@@ -92,38 +80,24 @@ defmodule VSA.Context do
   def maybe_set_volume_extreme(ctx),
     do: %Context{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
 
-  def latest_sma(%Context{bars: []}, _), do: nil
-
-  def latest_sma(%Context{bars: bars}, incoming_close_price) do
-    VSA.SMA.latest(bars, incoming_close_price)
-  end
-
-  def latest_ema(%Context{bars: []}, _), do: nil
-
-  def latest_ema(%Context{bars: bars}, incoming_close_price) do
-    VSA.EMA.latest(bars, incoming_close_price)
-  end
-
   def maybe_set_price_high_extreme(%Context{price_high: @zero, bars: bars} = ctx) do
     %Context{ctx | price_high: fetch_price_extreme(bars, :high)}
   end
 
   def maybe_set_price_high_extreme(
         %Context{
-          bars: [%VSA.Bar{close_price: close_price} | _],
+          bars: [%VSA.Bar{high: high} | _],
           price_high_set_bars_ago: price_high_set_bars_ago
         } = ctx
       ) do
-    if Decimal.gt?(close_price, ctx.price_high) do
-      %Context{ctx | price_high: close_price, price_high_set_bars_ago: 0}
+    if Decimal.gt?(high, ctx.price_high) do
+      %Context{ctx | price_high: high, price_high_set_bars_ago: 0}
     else
       %Context{ctx | price_high_set_bars_ago: price_high_set_bars_ago + 1}
     end
   end
 
-  def maybe_set_price_high_extreme(ctx) do
-    ctx
-  end
+  def maybe_set_price_high_extreme(ctx), do: ctx
 
   def maybe_set_price_low_extreme(%Context{price_low: @zero, bars: bars} = ctx) do
     %Context{ctx | price_low: fetch_price_extreme(bars, :low)}
@@ -131,12 +105,12 @@ defmodule VSA.Context do
 
   def maybe_set_price_low_extreme(
         %Context{
-          bars: [%VSA.Bar{close_price: close_price} | _],
+          bars: [%VSA.Bar{low: low} | _],
           price_low_set_bars_ago: price_low_set_bars_ago
         } = ctx
       ) do
-    if Decimal.lt?(close_price, ctx.price_low) do
-      %Context{ctx | price_low: close_price, price_low_set_bars_ago: 0}
+    if Decimal.lt?(low, ctx.price_low) do
+      %Context{ctx | price_low: low, price_low_set_bars_ago: 0}
     else
       %Context{ctx | price_low_set_bars_ago: price_low_set_bars_ago + 1}
     end
@@ -146,22 +120,14 @@ defmodule VSA.Context do
 
   def fetch_price_extreme(bars, :high) do
     bars
-    |> Enum.max_by(& &1.close_price, Decimal)
-    |> Map.fetch!(:close_price)
+    |> Enum.max_by(& &1.high, Decimal)
+    |> Map.fetch!(:high)
   end
 
   def fetch_price_extreme(bars, :low) do
     bars
     |> Enum.reject(&Decimal.eq?(&1.close_price, "0"))
-    |> Enum.min_by(& &1.close_price, Decimal)
-    |> Map.fetch!(:close_price)
-  end
-
-  def update_swing_detector(%Context{} = ctx, raw_candle) do
-    %Context{ctx | swing_detector: SwingDetector.add_candle(ctx.swing_detector, raw_candle)}
-  end
-
-  def set_trend(%Context{} = ctx) do
-    %Context{ctx | trend: SwingDetector.extract_trend(ctx.swing_detector)}
+    |> Enum.min_by(& &1.low, Decimal)
+    |> Map.fetch!(:low)
   end
 end

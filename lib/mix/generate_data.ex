@@ -29,10 +29,10 @@ defmodule Mix.Tasks.GenerateData do
     Mix.shell().info("Writed a file: #{filename}")
   end
 
-  defp fetch_data!(instrument, bar, number_of_requests \\ 5) do
+  defp fetch_data!(instrument, bar, number_of_requests \\ 50) do
     Enum.reduce(0..number_of_requests, {[], nil}, fn
       _, {[], nil} ->
-        response = Req.get!(@endpoint <> "?instId=#{instrument}&bar=#{bar}")
+        response = Req.get!(@endpoint <> "?instId=#{instrument}&bar=#{bar}&limit=500")
 
         response_body_data = Map.fetch!(response.body, "data")
 

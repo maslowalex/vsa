@@ -1,12 +1,50 @@
 defmodule VSA do
   @moduledoc """
-  Core functions that reflect volume spread analysis methodology
+  Core functions that reflect volume spread analysis methodology.
   """
-
   alias VSA.Bar
   alias VSA.Context
 
   alias Decimal, as: D
+
+  # Constants for close/open position calculations
+  # Renamed for clarity
+  # Above 70% of range
+  @position_high_threshold Application.compile_env(:vsa, :position_high_threshold, D.new("0.7"))
+  # Below 30% of range
+  @position_low_threshold Application.compile_env(:vsa, :position_low_threshold, D.new("0.3"))
+  # Fixed volume factors - now using volume/mean_volume ratio
+  # Volume > 2x average
+  @ultra_high_volume_factor Application.compile_env(:vsa, :ultra_high_volume_factor, D.new("2.0"))
+  # Volume > 1.5x average
+  @high_volume_factor Application.compile_env(:vsa, :high_volume_factor, D.new("1.5"))
+  # Volume < 0.5x average
+  @low_volume_factor Application.compile_env(:vsa, :low_volume_factor, D.new("0.5"))
+  # Volume < 0.25x average
+  @very_low_volume_factor Application.compile_env(:vsa, :very_low_volume_factor, D.new("0.25"))
+
+  @zero D.new(0)
+
+  @doc """
+  Initialize a new context for volume spread analysis.
+
+  ### Parameters
+  :max_bars - Maximum number of bars to keep in memory for analysis (default is 200).
+  :bars_to_mean - Number of bars to use for calculating the mean volume (default is 20).
+  """
+  def init(configuration \\ []) do
+    bars_to_extreme_reset = Application.get_env(:vsa, :bars_to_extreme_reset, 200)
+    max_bars = Keyword.get(configuration, :max_bars, 200)
+    bars_to_mean = Keyword.get(configuration, :bars_to_mean, 20)
+
+    if bars_to_extreme_reset > max_bars do
+      raise """
+      :max_bars can't be less then :bars_to_extreme_reset (currently #{max_bars})
+      """
+    end
+
+    %Context{max_bars: max_bars, bars_to_mean: bars_to_mean}
+  end
 
   @doc """
   Analyze the collection of %VSA.RawBar{} and annotates it with VSA-specific values
@@ -25,8 +63,6 @@ defmodule VSA do
   defp do_analyze(raw_bar, context) do
     context
     |> add_raw_bar(raw_bar)
-    |> Context.update_swing_detector(raw_bar)
-    |> Context.set_trend()
     |> Context.set_mean_vol()
     |> Context.set_mean_spread()
     |> Context.maybe_set_volume_extreme()
@@ -44,10 +80,10 @@ defmodule VSA do
     maybe_tagged_bar =
       ctx
       |> fill_bar(raw_bar)
-      |> then(fn filled_bar -> VSA.Indicator.assign(ctx, filled_bar) end)
+      |> then(fn filled_bar -> Vsa.Tag.assign(ctx, filled_bar) end)
 
     # Then confirm the previous bar with the new bar's close price
-    maybe_confirmed_bar = VSA.Indicator.confirm(bar_to_confirm, raw_bar.close)
+    maybe_confirmed_bar = Vsa.Tag.confirm(bar_to_confirm, raw_bar.close)
     bars = [maybe_confirmed_bar | tail_bars]
     ctx = %Context{ctx | bars: bars}
 
@@ -58,7 +94,7 @@ defmodule VSA do
     maybe_tagged_bar =
       ctx
       |> fill_bar(raw_bar)
-      |> then(fn filled_bar -> VSA.Indicator.assign(ctx, filled_bar) end)
+      |> then(fn filled_bar -> Vsa.Tag.assign(ctx, filled_bar) end)
 
     %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
   end
@@ -73,10 +109,6 @@ defmodule VSA do
 
   defp fill_bar(%Context{bars: [previous_bar | _]} = ctx, raw_bar) do
     absolute_spread = absolute_spread(raw_bar)
-    latest_ema = Context.latest_ema(ctx, raw_bar.close)
-    latest_sma = Context.latest_sma(ctx, raw_bar.close)
-
-    trend = VSA.Trend.evaluate(ctx, Decimal.to_float(raw_bar.close), latest_sma, latest_ema)
 
     %Bar{
       spread: absolute_spread,
@@ -91,10 +123,6 @@ defmodule VSA do
       relative_spread: relative_spread(ctx.mean_spread, absolute_spread),
       relative_volume: relative_volume(ctx.mean_vol, raw_bar.vol),
       tag: nil,
-      # Not sure it's belongs here
-      sma: latest_sma,
-      ema: latest_ema,
-      trend: trend,
       finished: raw_bar.finished
     }
   end
@@ -109,14 +137,6 @@ defmodule VSA do
       spread: absolute_spread(raw_bar)
     }
   end
-
-  # Constants for close/open position calculations
-  # Renamed for clarity
-  # Above 70% of range
-  @position_high_threshold D.new("0.7")
-  # Below 30% of range
-  @position_low_threshold D.new("0.3")
-  @zero D.new(0)
 
   defp closed(abs_spread, _) when abs_spread == @zero, do: :middle
   defp closed(_, %{close: c, low: l}) when c == l, do: :very_low
@@ -183,16 +203,6 @@ defmodule VSA do
         :average
     end
   end
-
-  # Fixed volume factors - now using volume/mean_volume ratio
-  # Volume > 2x average
-  @ultra_high_volume_factor D.new("2.0")
-  # Volume > 1.5x average
-  @high_volume_factor D.new("1.5")
-  # Volume < 0.5x average
-  @low_volume_factor D.new("0.5")
-  # Volume < 0.25x average
-  @very_low_volume_factor D.new("0.25")
 
   defp relative_volume(_, volume) when volume == @zero, do: :very_low
   defp relative_volume(mean_volume, _) when mean_volume == @zero, do: :average

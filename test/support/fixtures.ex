@@ -39,7 +39,12 @@ defmodule VSA.Fixtures do
       time: ~N[2025-10-01 12:00:00]
     }
 
-    context(bars: [bar(bar_fields)], mean_vol: mean_volume, price_high: price_high, price_low: price_low)
+    context(
+      bars: [bar(bar_fields)],
+      mean_vol: mean_volume,
+      price_high: price_high,
+      price_low: price_low
+    )
   end
 
   def context_with_setup(options) do
@@ -57,15 +62,28 @@ defmodule VSA.Fixtures do
     |> Map.put_new(:low, Decimal.new("64000"))
     |> Map.put_new(:close_price, Decimal.new("64500"))
     |> Map.put_new(:direction, Enum.random([:up, :down, :level]))
-    |> Map.put_new(:trend, Enum.random([:up, :down, :flat]))
     |> Map.put_new(:relative_spread, Enum.random([:wide, :narrow, :average]))
-    |> Map.put_new(:relative_volume, Enum.random([:ultra_high, :high, :average, :low, :ultra_low]))
+    |> Map.put_new(
+      :relative_volume,
+      Enum.random([:ultra_high, :high, :average, :low, :ultra_low])
+    )
     |> Map.put_new(:finished, true)
     |> then(fn fields -> struct!(Bar, fields) end)
   end
 
   def random_bar do
-    tag = Enum.random([:professional_buying, :professional_selling, :shakeout, :no_demand, :test, :unconfirmed_test, :unconfirmed_no_demand, :upthrust, nil])
+    tag =
+      Enum.random([
+        :professional_buying,
+        :professional_selling,
+        :shakeout,
+        :no_demand,
+        :test,
+        :unconfirmed_test,
+        :unconfirmed_no_demand,
+        :upthrust,
+        nil
+      ])
 
     bar(%{tag: tag, volume: volume_from_tag(tag)})
   end
