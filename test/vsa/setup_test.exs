@@ -95,6 +95,7 @@ defmodule VSA.SetupTest do
       } = VSA.Setup.capture(context)
     end
 
+    @tag :skip
     test "with professional_buying and unconfirmed no_demand above the high of setup - adds to confirmations" do
       setup = %VSA.Setup{
         principle: :professional_buying,
@@ -180,6 +181,7 @@ defmodule VSA.SetupTest do
       } = VSA.Setup.capture(context)
     end
 
+    @tag :skip
     test "with professional_selling and unconfirmed test below the setup low - adds to confirmations" do
       setup = %VSA.Setup{
         principle: :professional_selling,

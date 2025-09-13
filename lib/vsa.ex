@@ -63,6 +63,7 @@ defmodule VSA do
   defp do_analyze(raw_bar, context) do
     context
     |> add_raw_bar(raw_bar)
+    |> maybe_set_two_bar_tag()
     |> Context.set_mean_vol()
     |> Context.set_mean_spread()
     |> Context.maybe_set_volume_extreme()
@@ -83,11 +84,11 @@ defmodule VSA do
       |> then(fn filled_bar -> Vsa.Tag.assign(ctx, filled_bar) end)
 
     # Then confirm the previous bar with the new bar's close price
-    maybe_confirmed_bar = Vsa.Tag.confirm(bar_to_confirm, raw_bar.close)
+    maybe_confirmed_bar = Vsa.Tag.confirm(bar_to_confirm, maybe_tagged_bar)
     bars = [maybe_confirmed_bar | tail_bars]
     ctx = %Context{ctx | bars: bars}
 
-    %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
+    %Context{ctx | bars: preserve_bars_length(ctx.max_bars, ctx.bars, maybe_tagged_bar)}
   end
 
   def add_raw_bar(%Context{bars: bars} = ctx, raw_bar) do
@@ -97,6 +98,10 @@ defmodule VSA do
       |> then(fn filled_bar -> Vsa.Tag.assign(ctx, filled_bar) end)
 
     %Context{ctx | bars: preserve_bars_length(ctx.max_bars, bars, maybe_tagged_bar)}
+  end
+
+  defp maybe_set_two_bar_tag(ctx) do
+    Vsa.Tag.set_two_bar_tag(ctx)
   end
 
   defp preserve_bars_length(max_bars, bars, incoming_bar) do

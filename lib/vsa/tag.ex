@@ -8,21 +8,100 @@ defmodule Vsa.Tag do
   alias VSA.Bar
   alias VSA.Context
 
-  def confirm(%Bar{tag: tag} = bar_to_confirm, next_bar_close_price)
-      when tag in [:shakeout, :test, :professional_buying] do
-    if D.gt?(next_bar_close_price, bar_to_confirm.close_price) do
-      bar_to_confirm
+  @doc """
+  For now the only two indicators here is top reversal and bottom reversal
+  """
+  def set_two_bar_tag(
+        %Context{
+          bars: [
+            %Bar{
+              direction: :down,
+              closed: current_closed,
+              relative_spread: spread,
+              low: current_low
+            } = current,
+            %Bar{
+              direction: :up,
+              closed: init_closed,
+              relative_spread: spread,
+              low: previous_low,
+              relative_volume: relative_volume
+            } =
+              previous_bar
+            | rest_of_the_bars
+          ]
+          # price_high_set_bars_ago: 0
+        } = ctx
+      )
+      when spread in [:average, :wide] and init_closed in [:very_high, :high] and
+             current_closed in [:very_low, :low] and relative_volume in [:high, :ultra_high] do
+    if D.lt?(current_low, previous_low) do
+      %Context{
+        ctx
+        | bars: [
+            %Bar{current | tag: :top_reversal},
+            previous_bar | rest_of_the_bars
+          ]
+      }
     else
-      %Bar{bar_to_confirm | tag: :"unconfirmed_#{tag}"}
+      ctx
     end
   end
 
-  def confirm(%Bar{tag: tag} = bar_to_confirm, next_bar_close_price)
-      when tag in [:no_demand, :upthrust, :professional_selling] do
+  def set_two_bar_tag(
+        %Context{
+          bars: [
+            %Bar{
+              direction: :up,
+              closed: current_closed,
+              relative_spread: spread,
+              high: current_high
+            } = current,
+            %Bar{
+              direction: :down,
+              closed: init_closed,
+              relative_spread: spread,
+              high: previous_high,
+              relative_volume: relative_volume
+            } =
+              previous_bar
+            | rest_of_the_bars
+          ]
+          # price_low_set_bars_ago: 0
+        } = ctx
+      )
+      when spread in [:average, :wide] and init_closed in [:very_low, :low] and
+             current_closed in [:very_high, :high] and relative_volume in [:high, :ultra_high] do
+    if D.gt?(current_high, previous_high) do
+      %Context{
+        ctx
+        | bars: [
+            %Bar{current | tag: :bottom_reversal},
+            previous_bar | rest_of_the_bars
+          ]
+      }
+    else
+      ctx
+    end
+  end
+
+  def set_two_bar_tag(ctx), do: ctx
+
+  def confirm(%Bar{tag: tag} = bar_to_confirm, %Bar{close_price: next_bar_close_price})
+      when tag in [:shakeout, :test, :professional_buying, :bottom_reversal] do
+    if D.gt?(next_bar_close_price, bar_to_confirm.close_price) do
+      bar_to_confirm
+    else
+      %Bar{bar_to_confirm | tag: nil}
+    end
+  end
+
+  def confirm(%Bar{tag: tag} = bar_to_confirm, %Bar{close_price: next_bar_close_price})
+      when tag in [:no_demand, :upthrust, :professional_selling, :top_reversal] do
     if D.lt?(next_bar_close_price, bar_to_confirm.close_price) do
       bar_to_confirm
     else
-      %Bar{bar_to_confirm | tag: :"unconfirmed_#{tag}"}
+      %Bar{bar_to_confirm | tag: nil}
     end
   end
 

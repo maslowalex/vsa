@@ -19,6 +19,7 @@ defmodule VSA.Setup do
     confirmations: []
   ]
 
+  @reversal_actions [:top_reversal, :bottom_reversal]
   @climactic_actions [:professional_buying, :professional_selling]
 
   def tested?(%VSA.Setup{confirmations: []}), do: false
@@ -36,9 +37,23 @@ defmodule VSA.Setup do
   end
 
   def capture(%Context{
+        bars: [%Bar{tag: reversal} = reversal_bar | _]
+      })
+      when reversal in @reversal_actions do
+    %VSA.Setup{
+      principle: reversal,
+      volume: reversal_bar.volume,
+      high: reversal_bar.high,
+      low: reversal_bar.low,
+      inception_time: reversal_bar.time
+    }
+  end
+
+  def capture(%Context{
         bars: [%Bar{tag: :test} = test_bar | _],
-        setup: %VSA.Setup{principle: :professional_buying} = setup
-      }) do
+        setup: %VSA.Setup{principle: principle} = setup
+      })
+      when principle in [:professional_buying, :bottom_reversal] do
     if Decimal.gt?(test_bar.close_price, setup.high) do
       bar = take_essential_bar_info(test_bar)
 
@@ -49,9 +64,20 @@ defmodule VSA.Setup do
   end
 
   def capture(%Context{
-        bars: [%Bar{tag: :unconfirmed_test} = test_bar | _],
-        setup: %VSA.Setup{principle: :professional_selling} = setup
-      }) do
+        bars: [%Bar{tag: :shakeout} = shakeout_bar | _],
+        setup: %VSA.Setup{principle: principle} = setup
+      })
+      when principle in [:professional_buying, :bottom_reversal] do
+    bar = take_essential_bar_info(shakeout_bar)
+
+    %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
+  end
+
+  def capture(%Context{
+        bars: [%Bar{tag: :no_demand} = test_bar | _],
+        setup: %VSA.Setup{principle: principle} = setup
+      })
+      when principle in [:professional_selling, :top_reversal] do
     if Decimal.lt?(test_bar.close_price, setup.low) do
       bar = take_essential_bar_info(test_bar)
 
@@ -62,45 +88,11 @@ defmodule VSA.Setup do
   end
 
   def capture(%Context{
-        bars: [%Bar{tag: :shakeout} = shakeout_bar | _],
-        setup: %VSA.Setup{principle: :professional_buying} = setup
-      }) do
-    bar = take_essential_bar_info(shakeout_bar)
-
-    %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
-  end
-
-  def capture(%Context{
-        bars: [%Bar{tag: :no_demand} = no_demand_bar | _],
-        setup: %VSA.Setup{principle: :professional_selling} = setup
-      }) do
-    if Decimal.lt?(no_demand_bar.close_price, setup.low) do
-      bar = take_essential_bar_info(no_demand_bar)
-
-      %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
-    else
-      setup
-    end
-  end
-
-  def capture(%Context{
-        bars: [%Bar{tag: :unconfirmed_no_demand} = no_demand_bar | _],
-        setup: %VSA.Setup{principle: :professional_buying} = setup
-      }) do
-    if Decimal.gt?(no_demand_bar.close_price, setup.high) do
-      bar = take_essential_bar_info(no_demand_bar)
-
-      %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
-    else
-      setup
-    end
-  end
-
-  def capture(%Context{
-        bars: [%Bar{tag: :upthrust} = upthrust_bar | _],
-        setup: %VSA.Setup{principle: :professional_selling} = setup
-      }) do
-    bar = take_essential_bar_info(upthrust_bar)
+        bars: [%Bar{tag: :upthrust} = test_bar | _],
+        setup: %VSA.Setup{principle: principle} = setup
+      })
+      when principle in [:professional_selling, :top_reversal] do
+    bar = take_essential_bar_info(test_bar)
 
     %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
   end
