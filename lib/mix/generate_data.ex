@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.GenerateData do
   use Mix.Task
 
+  @preferred_cli_env :backtest
   @shortdoc "Generate a test data from OKex API"
   @requirements ["app.start"]
 

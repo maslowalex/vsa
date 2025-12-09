@@ -28,7 +28,7 @@ defmodule VSA.Context do
   @bars_to_extreme_reset Application.compile_env(:vsa, :bars_to_extreme_reset, 200)
 
   def maybe_capture_setup(%Context{} = context) do
-    %Context{context | setup: VSA.Setup.capture(context)}
+    %{context | setup: VSA.Setup.capture(context)}
   end
 
   def set_mean_vol(%Context{} = ctx, []), do: ctx
@@ -41,7 +41,7 @@ defmodule VSA.Context do
       |> Enum.reduce(@zero, &D.add(&1.volume, &2))
       |> D.div(Enum.count(latest_n_bars))
 
-    %Context{ctx | mean_vol: mean_vol}
+    %{ctx | mean_vol: mean_vol}
   end
 
   def set_mean_spread(%Context{bars: []} = ctx), do: ctx
@@ -54,7 +54,7 @@ defmodule VSA.Context do
       |> Enum.reduce(@zero, &D.add(&1.spread, &2))
       |> D.div(Enum.count(latest_n_bars))
 
-    %Context{ctx | mean_spread: mean_spread}
+    %{ctx | mean_spread: mean_spread}
   end
 
   def maybe_set_volume_extreme(
@@ -65,23 +65,23 @@ defmodule VSA.Context do
       )
       when volume_extreme_set_bars_ago <= @bars_to_extreme_reset do
     if Decimal.gt?(v, ctx.volume_extreme) do
-      %Context{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+      %{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
     else
-      %Context{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
+      %{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
     end
   end
 
   def maybe_set_volume_extreme(
         %Context{bars: [%VSA.Bar{relative_volume: :ultra_high, volume: v} | _]} = ctx
       ) do
-    %Context{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+    %{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
   end
 
   def maybe_set_volume_extreme(ctx),
-    do: %Context{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
+    do: %{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
 
   def maybe_set_price_high_extreme(%Context{price_high: @zero, bars: bars} = ctx) do
-    %Context{ctx | price_high: fetch_price_extreme(bars, :high)}
+    %{ctx | price_high: fetch_price_extreme(bars, :high)}
   end
 
   def maybe_set_price_high_extreme(
@@ -91,16 +91,16 @@ defmodule VSA.Context do
         } = ctx
       ) do
     if Decimal.gt?(high, ctx.price_high) do
-      %Context{ctx | price_high: high, price_high_set_bars_ago: 0}
+      %{ctx | price_high: high, price_high_set_bars_ago: 0}
     else
-      %Context{ctx | price_high_set_bars_ago: price_high_set_bars_ago + 1}
+      %{ctx | price_high_set_bars_ago: price_high_set_bars_ago + 1}
     end
   end
 
   def maybe_set_price_high_extreme(ctx), do: ctx
 
   def maybe_set_price_low_extreme(%Context{price_low: @zero, bars: bars} = ctx) do
-    %Context{ctx | price_low: fetch_price_extreme(bars, :low)}
+    %{ctx | price_low: fetch_price_extreme(bars, :low)}
   end
 
   def maybe_set_price_low_extreme(
@@ -110,9 +110,9 @@ defmodule VSA.Context do
         } = ctx
       ) do
     if Decimal.lt?(low, ctx.price_low) do
-      %Context{ctx | price_low: low, price_low_set_bars_ago: 0}
+      %{ctx | price_low: low, price_low_set_bars_ago: 0}
     else
-      %Context{ctx | price_low_set_bars_ago: price_low_set_bars_ago + 1}
+      %{ctx | price_low_set_bars_ago: price_low_set_bars_ago + 1}
     end
   end
 

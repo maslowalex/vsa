@@ -33,7 +33,7 @@ defmodule VSA do
   :bars_to_mean - Number of bars to use for calculating the mean volume (default is 20).
   """
   def init(configuration \\ []) do
-    bars_to_extreme_reset = Application.get_env(:vsa, :bars_to_extreme_reset, 200)
+    bars_to_extreme_reset = Application.get_env(:vsa, :bars_to_extreme_reset, 20)
     max_bars = Keyword.get(configuration, :max_bars, 200)
     bars_to_mean = Keyword.get(configuration, :bars_to_mean, 20)
 
@@ -119,14 +119,14 @@ defmodule VSA do
       spread: absolute_spread,
       high: raw_bar.high,
       low: raw_bar.low,
-      time: DateTime.from_unix!(raw_bar.ts, :millisecond),
+      time: DateTime.from_unix!(raw_bar.timestamp, :millisecond),
       close_price: raw_bar.close,
       closed: closed(absolute_spread, raw_bar),
       opened: opened(absolute_spread, raw_bar),
-      volume: raw_bar.vol,
+      volume: raw_bar.volume,
       direction: direction(previous_bar.close_price, raw_bar.close),
       relative_spread: relative_spread(ctx.mean_spread, absolute_spread),
-      relative_volume: relative_volume(ctx.mean_vol, raw_bar.vol),
+      relative_volume: relative_volume(ctx.mean_vol, raw_bar.volume),
       tag: nil,
       finished: raw_bar.finished
     }
@@ -136,9 +136,9 @@ defmodule VSA do
     %Bar{
       high: raw_bar.high,
       low: raw_bar.low,
-      time: DateTime.from_unix!(raw_bar.ts, :millisecond),
+      time: DateTime.from_unix!(raw_bar.timestamp, :millisecond),
       close_price: raw_bar.close,
-      volume: raw_bar.vol,
+      volume: raw_bar.volume,
       spread: absolute_spread(raw_bar)
     }
   end
