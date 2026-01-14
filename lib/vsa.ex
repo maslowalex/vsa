@@ -6,44 +6,88 @@ defmodule VSA do
   alias VSA.Context
 
   alias Decimal, as: D
-
-  # Constants for close/open position calculations
-  # Renamed for clarity
-  # Above 70% of range
-  @position_high_threshold Application.compile_env(:vsa, :position_high_threshold, D.new("0.7"))
-  # Below 30% of range
-  @position_low_threshold Application.compile_env(:vsa, :position_low_threshold, D.new("0.3"))
-  # Fixed volume factors - now using volume/mean_volume ratio
-  # Volume > 2x average
-  @ultra_high_volume_factor Application.compile_env(:vsa, :ultra_high_volume_factor, D.new("2.0"))
-  # Volume > 1.5x average
-  @high_volume_factor Application.compile_env(:vsa, :high_volume_factor, D.new("1.5"))
-  # Volume < 0.5x average
-  @low_volume_factor Application.compile_env(:vsa, :low_volume_factor, D.new("0.5"))
-  # Volume < 0.25x average
-  @very_low_volume_factor Application.compile_env(:vsa, :very_low_volume_factor, D.new("0.25"))
+  alias VSA.Thresholds
 
   @zero D.new(0)
 
   @doc """
   Initialize a new context for volume spread analysis.
 
-  ### Parameters
-  :max_bars - Maximum number of bars to keep in memory for analysis (default is 200).
-  :bars_to_mean - Number of bars to use for calculating the mean volume (default is 20).
+  ## Parameters
+
+  - `:max_bars` - Maximum number of bars to keep in memory for analysis (default 200).
+  - `:bars_to_mean` - Number of bars to use for calculating the mean volume (default 20).
+  - `:thresholds` - A `%VSA.Thresholds{}` struct or keyword list of threshold overrides.
+
+  ## Threshold Options (when passing keyword list)
+
+  - `:position_high_threshold` - Above this position (0-1) is considered "high" close (default 0.7)
+  - `:position_low_threshold` - Below this position (0-1) is considered "low" close (default 0.3)
+  - `:ultra_high_volume_factor` - Volume > this x mean is "ultra_high" (default 2.0)
+  - `:high_volume_factor` - Volume > this x mean is "high" (default 1.5)
+  - `:low_volume_factor` - Volume < this x mean is "low" (default 0.5)
+  - `:very_low_volume_factor` - Volume < this x mean is "very_low" (default 0.25)
+  - `:wide_spread_factor` - Spread > this x mean is "wide" (default 1.5)
+  - `:narrow_spread_factor` - Spread < this x mean is "narrow" (default 0.7)
+  - `:bars_to_extreme_reset` - Bars before resetting volume extreme tracking (default 200)
+
+  ## Examples
+
+      # Default configuration
+      VSA.init()
+
+      # Custom max_bars and bars_to_mean
+      VSA.init(max_bars: 100, bars_to_mean: 30)
+
+      # Custom thresholds inline
+      VSA.init(
+        max_bars: 100,
+        position_high_threshold: Decimal.new("0.8"),
+        ultra_high_volume_factor: Decimal.new("2.5")
+      )
+
+      # Pre-built thresholds struct
+      {:ok, thresholds} = VSA.Thresholds.new(position_high_threshold: Decimal.new("0.6"))
+      VSA.init(max_bars: 100, thresholds: thresholds)
   """
   def init(configuration \\ []) do
-    bars_to_extreme_reset = Application.get_env(:vsa, :bars_to_extreme_reset, 20)
     max_bars = Keyword.get(configuration, :max_bars, 200)
     bars_to_mean = Keyword.get(configuration, :bars_to_mean, 20)
+    thresholds = build_thresholds!(configuration)
 
-    if bars_to_extreme_reset > max_bars do
-      raise """
-      :max_bars can't be less then :bars_to_extreme_reset (currently #{max_bars})
+    if thresholds.bars_to_extreme_reset > max_bars do
+      raise ArgumentError, """
+      :max_bars (#{max_bars}) can't be less than :bars_to_extreme_reset (#{thresholds.bars_to_extreme_reset})
       """
     end
 
-    %Context{max_bars: max_bars, bars_to_mean: bars_to_mean}
+    %Context{max_bars: max_bars, bars_to_mean: bars_to_mean, thresholds: thresholds}
+  end
+
+  defp build_thresholds!(configuration) do
+    case Keyword.get(configuration, :thresholds) do
+      %Thresholds{} = t ->
+        t
+
+      nil ->
+        threshold_keys = [
+          :position_high_threshold,
+          :position_low_threshold,
+          :ultra_high_volume_factor,
+          :high_volume_factor,
+          :low_volume_factor,
+          :very_low_volume_factor,
+          :wide_spread_factor,
+          :narrow_spread_factor,
+          :bars_to_extreme_reset
+        ]
+
+        threshold_opts = Keyword.take(configuration, threshold_keys)
+        Thresholds.new!(threshold_opts)
+
+      other when is_list(other) ->
+        Thresholds.new!(other)
+    end
   end
 
   @doc """
@@ -112,7 +156,7 @@ defmodule VSA do
     end
   end
 
-  defp fill_bar(%Context{bars: [previous_bar | _]} = ctx, raw_bar) do
+  defp fill_bar(%Context{bars: [previous_bar | _], thresholds: thresholds} = ctx, raw_bar) do
     absolute_spread = absolute_spread(raw_bar)
 
     %Bar{
@@ -121,12 +165,12 @@ defmodule VSA do
       low: raw_bar.low,
       time: DateTime.from_unix!(raw_bar.timestamp, :millisecond),
       close_price: raw_bar.close,
-      closed: closed(absolute_spread, raw_bar),
-      opened: opened(absolute_spread, raw_bar),
+      closed: closed(absolute_spread, raw_bar, thresholds),
+      opened: opened(absolute_spread, raw_bar, thresholds),
       volume: raw_bar.volume,
       direction: direction(previous_bar.close_price, raw_bar.close),
-      relative_spread: relative_spread(ctx.mean_spread, absolute_spread),
-      relative_volume: relative_volume(ctx.mean_vol, raw_bar.volume),
+      relative_spread: relative_spread(ctx.mean_spread, absolute_spread, thresholds),
+      relative_volume: relative_volume(ctx.mean_vol, raw_bar.volume, thresholds),
       tag: nil,
       finished: raw_bar.finished
     }
@@ -143,37 +187,31 @@ defmodule VSA do
     }
   end
 
-  defp closed(abs_spread, _) when abs_spread == @zero, do: :middle
-  defp closed(_, %{close: c, low: l}) when c == l, do: :very_low
-  defp closed(_, %{high: h, close: c}) when c == h, do: :very_high
+  defp closed(abs_spread, _, _thresholds) when abs_spread == @zero, do: :middle
+  defp closed(_, %{close: c, low: l}, _thresholds) when c == l, do: :very_low
+  defp closed(_, %{high: h, close: c}, _thresholds) when c == h, do: :very_high
 
-  defp closed(abs_spread, %{close: c, low: l}) do
-    # Calculate normalized position (0 to 1) where close is within the range
+  defp closed(abs_spread, %{close: c, low: l}, %Thresholds{} = thresholds) do
     position = D.div(D.sub(c, l), abs_spread)
 
     cond do
-      D.lt?(position, @position_low_threshold) -> :low
-      D.gt?(position, @position_high_threshold) -> :high
+      D.lt?(position, thresholds.position_low_threshold) -> :low
+      D.gt?(position, thresholds.position_high_threshold) -> :high
       true -> :middle
     end
   end
 
-  defp opened(abs_spread, _) when abs_spread == @zero, do: :middle
+  defp opened(abs_spread, _, _thresholds) when abs_spread == @zero, do: :middle
+  defp opened(_, raw_bar, _thresholds) when not is_map_key(raw_bar, :open), do: :middle
+  defp opened(_, %{open: o, low: l}, _thresholds) when o == l, do: :very_low
+  defp opened(_, %{high: h, open: o}, _thresholds) when o == h, do: :very_high
 
-  # Check if bar has open field
-  defp opened(_, raw_bar) when not is_map_key(raw_bar, :open), do: :middle
-
-  defp opened(_, %{open: o, low: l}) when o == l, do: :very_low
-  # Fixed: checking open == high
-  defp opened(_, %{high: h, open: o}) when o == h, do: :very_high
-
-  defp opened(abs_spread, %{open: o, low: l}) do
-    # Calculate normalized position (0 to 1) where open is within the range
+  defp opened(abs_spread, %{open: o, low: l}, %Thresholds{} = thresholds) do
     position = D.div(D.sub(o, l), abs_spread)
 
     cond do
-      D.lt?(position, @position_low_threshold) -> :low
-      D.gt?(position, @position_high_threshold) -> :high
+      D.lt?(position, thresholds.position_low_threshold) -> :low
+      D.gt?(position, thresholds.position_high_threshold) -> :high
       true -> :middle
     end
   end
@@ -190,18 +228,15 @@ defmodule VSA do
     D.sub(h, l)
   end
 
-  @wide_spread_factor D.new("1.5")
-  @narrow_spread_factor D.new("0.7")
+  defp relative_spread(mean_spread, _, _thresholds) when mean_spread == @zero, do: :narrow
+  defp relative_spread(_, spread, _thresholds) when spread == @zero, do: :narrow
 
-  defp relative_spread(mean_spread, _) when mean_spread == @zero, do: :narrow
-  defp relative_spread(_, spread) when spread == @zero, do: :narrow
-
-  defp relative_spread(mean_spread, spread) do
+  defp relative_spread(mean_spread, spread, %Thresholds{} = thresholds) do
     cond do
-      D.gt?(spread, D.mult(@wide_spread_factor, mean_spread)) ->
+      D.gt?(spread, D.mult(thresholds.wide_spread_factor, mean_spread)) ->
         :wide
 
-      D.lt?(spread, D.mult(@narrow_spread_factor, mean_spread)) ->
+      D.lt?(spread, D.mult(thresholds.narrow_spread_factor, mean_spread)) ->
         :narrow
 
       true ->
@@ -209,24 +244,23 @@ defmodule VSA do
     end
   end
 
-  defp relative_volume(_, volume) when volume == @zero, do: :very_low
-  defp relative_volume(mean_volume, _) when mean_volume == @zero, do: :average
+  defp relative_volume(_, volume, _thresholds) when volume == @zero, do: :very_low
+  defp relative_volume(mean_volume, _, _thresholds) when mean_volume == @zero, do: :average
 
-  defp relative_volume(mean_volume, volume) do
-    # Fixed: Now correctly calculating volume ratio (volume/mean_volume)
+  defp relative_volume(mean_volume, volume, %Thresholds{} = thresholds) do
     ratio = D.div(volume, mean_volume)
 
     cond do
-      D.gt?(ratio, @ultra_high_volume_factor) ->
+      D.gt?(ratio, thresholds.ultra_high_volume_factor) ->
         :ultra_high
 
-      D.gt?(ratio, @high_volume_factor) ->
+      D.gt?(ratio, thresholds.high_volume_factor) ->
         :high
 
-      D.lt?(ratio, @very_low_volume_factor) ->
+      D.lt?(ratio, thresholds.very_low_volume_factor) ->
         :very_low
 
-      D.lt?(ratio, @low_volume_factor) ->
+      D.lt?(ratio, thresholds.low_volume_factor) ->
         :low
 
       true ->

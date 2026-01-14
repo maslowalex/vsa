@@ -6,15 +6,17 @@ defmodule VSA.Fixtures do
     bars = Keyword.get(opts, :bars, [])
     setup = Keyword.get(opts, :setup)
     price_high = Keyword.get(opts, :price_high)
-    price_low = Keyword.get(opts, :price_high)
+    price_low = Keyword.get(opts, :price_low)
     volume_extreme = Keyword.get(opts, :volume_extreme)
+    thresholds = Keyword.get(opts, :thresholds, %VSA.Thresholds{})
 
     %Context{
       bars: bars,
       setup: setup,
       price_high: price_high,
       price_low: price_low,
-      volume_extreme: volume_extreme
+      volume_extreme: volume_extreme,
+      thresholds: thresholds
     }
   end
 

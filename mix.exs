@@ -27,7 +27,8 @@ defmodule Vsa.MixProject do
   defp deps do
     [
       {:decimal, "~> 2.1"},
-      {:req, "~> 0.5.8", optional: true}
+      {:req, "~> 0.5.8", optional: true},
+      {:stream_data, "~> 1.0", only: :test}
     ]
   end
 end

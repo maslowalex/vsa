@@ -20,12 +20,11 @@ defmodule VSA.Context do
             price_low: @zero,
             price_low_set_bars_ago: 0,
             price_high_set_bars_ago: 0,
-            setup: nil
+            setup: nil,
+            thresholds: %VSA.Thresholds{}
 
   alias Decimal, as: D
   alias VSA.Context
-
-  @bars_to_extreme_reset Application.compile_env(:vsa, :bars_to_extreme_reset, 200)
 
   def maybe_capture_setup(%Context{} = context) do
     %{context | setup: VSA.Setup.capture(context)}
@@ -60,21 +59,21 @@ defmodule VSA.Context do
   def maybe_set_volume_extreme(
         %Context{
           bars: [%VSA.Bar{relative_volume: :ultra_high, volume: v} | _],
-          volume_extreme_set_bars_ago: volume_extreme_set_bars_ago
+          volume_extreme_set_bars_ago: volume_extreme_set_bars_ago,
+          thresholds: %VSA.Thresholds{bars_to_extreme_reset: bars_to_extreme_reset}
         } = ctx
-      )
-      when volume_extreme_set_bars_ago <= @bars_to_extreme_reset do
-    if Decimal.gt?(v, ctx.volume_extreme) do
-      %{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
-    else
-      %{ctx | volume_extreme_set_bars_ago: ctx.volume_extreme_set_bars_ago + 1}
-    end
-  end
-
-  def maybe_set_volume_extreme(
-        %Context{bars: [%VSA.Bar{relative_volume: :ultra_high, volume: v} | _]} = ctx
       ) do
-    %{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+    cond do
+      volume_extreme_set_bars_ago <= bars_to_extreme_reset and Decimal.gt?(v, ctx.volume_extreme) ->
+        %{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+
+      volume_extreme_set_bars_ago <= bars_to_extreme_reset ->
+        %{ctx | volume_extreme_set_bars_ago: volume_extreme_set_bars_ago + 1}
+
+      true ->
+        # Reset: volume_extreme_set_bars_ago > bars_to_extreme_reset
+        %{ctx | volume_extreme: v, volume_extreme_set_bars_ago: 0}
+    end
   end
 
   def maybe_set_volume_extreme(ctx),
