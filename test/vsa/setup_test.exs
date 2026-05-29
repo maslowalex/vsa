@@ -14,6 +14,7 @@ defmodule VSA.SetupTest do
         volume: bar.volume,
         high: bar.high,
         low: bar.low,
+        close_price: bar.close_price,
         inception_time: bar.time
       }
     end
@@ -28,8 +29,16 @@ defmodule VSA.SetupTest do
         volume: bar.volume,
         high: bar.high,
         low: bar.low,
+        close_price: bar.close_price,
         inception_time: bar.time
       }
+    end
+
+    test "captured climactic setup carries the bar's close_price verbatim" do
+      context = context_with_climactic_last_bar(tag: :professional_buying, close_price: Decimal.new("64111"))
+
+      assert %VSA.Setup{close_price: %Decimal{} = close} = VSA.Setup.capture(context)
+      assert Decimal.equal?(close, Decimal.new("64111"))
     end
 
     test "with professional_buying setup and test above the high - adds confirmation" do

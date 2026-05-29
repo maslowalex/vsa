@@ -15,6 +15,7 @@ defmodule VSA.Setup do
     :volume,
     :high,
     :low,
+    :close_price,
     :inception_time,
     confirmations: []
   ]
@@ -32,6 +33,7 @@ defmodule VSA.Setup do
       volume: climactic_bar.volume,
       high: climactic_bar.high,
       low: climactic_bar.low,
+      close_price: climactic_bar.close_price,
       inception_time: climactic_bar.time
     }
   end
@@ -45,6 +47,7 @@ defmodule VSA.Setup do
       volume: reversal_bar.volume,
       high: reversal_bar.high,
       low: reversal_bar.low,
+      close_price: reversal_bar.close_price,
       inception_time: reversal_bar.time
     }
   end
