@@ -1,9 +1,39 @@
 defmodule VSA.Setup do
   @moduledoc """
-  The latest occured climactic volume bar (either PS or PB) is the starting point of the setup.
+  A trade thesis built from a primary VSA event and the secondary events that validate it.
 
-  The setup is considered confirmed when we have a secondary indicator (such as test or no demand) penetrating the high or the low
-  of the climactic volume bar, or we observing the SO or UT in the area of the climactic volume bar.
+  A setup is **anchored** by a primary turning-point bar and then **confirmed** by secondary
+  bars that fall in the same direction (polarity). Each principle plays exactly one role:
+
+  ## Anchors (start / replace a setup)
+
+  These are the climactic and reversal principles — the bars that mark a top or a bottom.
+  The latest anchor bar wins, so a fresh climax replaces an older setup (and an opposite-
+  polarity anchor flips the regime).
+
+    * Strength (mark a bottom): `:professional_buying`, `:bottom_reversal`,
+      `:selling_climax`, `:bag_holding`
+    * Weakness (mark a top): `:professional_selling`, `:top_reversal`, `:buying_climax`,
+      `:end_of_rising_market`
+
+  ## Confirmations (append to the active setup)
+
+  The secondary signals. They are only meaningful relative to an existing setup of the same
+  polarity; a confirmation against an opposite-polarity setup is ignored.
+
+    * Strength: `:test`, `:shakeout`, `:no_supply`, `:stopping_volume`, `:absorption_volume`
+    * Weakness: `:no_demand`, `:upthrust`, `:no_demand_at_top`,
+      `:wide_spread_down_through_support`, `:no_result_from_effort`, `:churning`
+
+  The Test-like confirmations (`:test`/`:no_supply` for strength, `:no_demand`/
+  `:no_demand_at_top` for weakness) must *penetrate* the setup area — close above the setup
+  high (strength) or below the setup low (weakness). The remaining confirmations are
+  structural follow-through and are recorded regardless of close price (as `:shakeout` /
+  `:upthrust` always were).
+
+  Two cross-polarity exceptions are kept: an *unconfirmed* `:no_demand` (a weakness signal
+  that failed) pushing above a strength setup's high is itself strength; symmetrically an
+  *unconfirmed* `:test` breaking below a weakness setup's low confirms weakness.
   """
 
   alias VSA.Bar
@@ -20,89 +50,122 @@ defmodule VSA.Setup do
     confirmations: []
   ]
 
-  @reversal_actions [:top_reversal, :bottom_reversal]
-  @climactic_actions [:professional_buying, :professional_selling]
+  @strength_anchors [:professional_buying, :bottom_reversal, :selling_climax, :bag_holding]
+  @weakness_anchors [:professional_selling, :top_reversal, :buying_climax, :end_of_rising_market]
+
+  @strength_confirmations [:test, :shakeout, :no_supply, :stopping_volume, :absorption_volume]
+  @weakness_confirmations [
+    :no_demand,
+    :upthrust,
+    :no_demand_at_top,
+    :wide_spread_down_through_support,
+    :no_result_from_effort,
+    :churning
+  ]
+
+  # Confirmations that must penetrate the setup area (vs. structural follow-through).
+  @strength_penetration [:test, :no_supply]
+  @weakness_penetration [:no_demand, :no_demand_at_top]
+
+  @doc """
+  The polarity of an anchor principle: `:strength`, `:weakness`, or `:neutral`.
+
+  Reused by `VSA.Context.set_background/1` so the background regime and the setup layer
+  share one classification.
+  """
+  def anchor_polarity(tag) when tag in @strength_anchors, do: :strength
+  def anchor_polarity(tag) when tag in @weakness_anchors, do: :weakness
+  def anchor_polarity(_tag), do: :neutral
 
   def tested?(%VSA.Setup{confirmations: []}), do: false
   def tested?(%VSA.Setup{}), do: true
 
-  def capture(%Context{bars: [%Bar{tag: climactic_action} = climactic_bar | _]})
-      when climactic_action in @climactic_actions do
-    %VSA.Setup{
-      principle: climactic_action,
-      volume: climactic_bar.volume,
-      high: climactic_bar.high,
-      low: climactic_bar.low,
-      close_price: climactic_bar.close_price,
-      inception_time: climactic_bar.time
-    }
+  # --- Anchors: a primary bar starts (or replaces) the setup. ---
+
+  def capture(%Context{bars: [%Bar{tag: tag} = bar | _]}) when tag in @strength_anchors do
+    new_setup(bar, tag)
   end
 
-  def capture(%Context{
-        bars: [%Bar{tag: reversal} = reversal_bar | _]
-      })
-      when reversal in @reversal_actions do
-    %VSA.Setup{
-      principle: reversal,
-      volume: reversal_bar.volume,
-      high: reversal_bar.high,
-      low: reversal_bar.low,
-      close_price: reversal_bar.close_price,
-      inception_time: reversal_bar.time
-    }
+  def capture(%Context{bars: [%Bar{tag: tag} = bar | _]}) when tag in @weakness_anchors do
+    new_setup(bar, tag)
   end
 
+  # --- Cross-polarity exceptions: a failed (unconfirmed) signal that pierces the opposite
+  # side of the setup area confirms the setup. Must precede the generic confirmation clause. ---
+
   def capture(%Context{
-        bars: [%Bar{tag: :test} = test_bar | _],
+        bars: [%Bar{tag: :no_demand, status: :unconfirmed} = bar | _],
         setup: %VSA.Setup{principle: principle} = setup
       })
-      when principle in [:professional_buying, :bottom_reversal] do
-    if Decimal.gt?(test_bar.close_price, setup.high) do
-      bar = take_essential_bar_info(test_bar)
-
-      %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
-    else
-      setup
-    end
+      when principle in @strength_anchors do
+    if Decimal.gt?(bar.close_price, setup.high), do: append(setup, bar), else: setup
   end
 
   def capture(%Context{
-        bars: [%Bar{tag: :shakeout} = shakeout_bar | _],
+        bars: [%Bar{tag: :test, status: :unconfirmed} = bar | _],
         setup: %VSA.Setup{principle: principle} = setup
       })
-      when principle in [:professional_buying, :bottom_reversal] do
-    bar = take_essential_bar_info(shakeout_bar)
-
-    %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
+      when principle in @weakness_anchors do
+    if Decimal.lt?(bar.close_price, setup.low), do: append(setup, bar), else: setup
   end
 
-  def capture(%Context{
-        bars: [%Bar{tag: :no_demand} = test_bar | _],
-        setup: %VSA.Setup{principle: principle} = setup
-      })
-      when principle in [:professional_selling, :top_reversal] do
-    if Decimal.lt?(test_bar.close_price, setup.low) do
-      bar = take_essential_bar_info(test_bar)
+  # --- Confirmations: a secondary bar matching the active setup's polarity. ---
 
-      %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
-    else
-      setup
-    end
-  end
-
-  def capture(%Context{
-        bars: [%Bar{tag: :upthrust} = test_bar | _],
-        setup: %VSA.Setup{principle: principle} = setup
-      })
-      when principle in [:professional_selling, :top_reversal] do
-    bar = take_essential_bar_info(test_bar)
-
-    %VSA.Setup{setup | confirmations: [bar | setup.confirmations]}
+  def capture(%Context{bars: [%Bar{tag: tag} = bar | _], setup: %VSA.Setup{} = setup})
+      when tag in @strength_confirmations or tag in @weakness_confirmations do
+    maybe_confirm(setup, bar, tag)
   end
 
   def capture(%Context{setup: setup}), do: setup
 
+  defp new_setup(%Bar{} = bar, principle) do
+    %VSA.Setup{
+      principle: principle,
+      volume: bar.volume,
+      high: bar.high,
+      low: bar.low,
+      close_price: bar.close_price,
+      inception_time: bar.time
+    }
+  end
+
+  defp maybe_confirm(%VSA.Setup{principle: principle} = setup, bar, tag) do
+    case anchor_polarity(principle) do
+      :strength when tag in @strength_confirmations ->
+        add_confirmation(setup, bar, tag, :strength)
+
+      :weakness when tag in @weakness_confirmations ->
+        add_confirmation(setup, bar, tag, :weakness)
+
+      _ ->
+        setup
+    end
+  end
+
+  # Test-like confirmations must penetrate the setup area; the rest are unconditional.
+  defp add_confirmation(setup, bar, tag, :strength) when tag in @strength_penetration do
+    if Decimal.gt?(bar.close_price, setup.high), do: append(setup, bar), else: setup
+  end
+
+  defp add_confirmation(setup, bar, tag, :weakness) when tag in @weakness_penetration do
+    if Decimal.lt?(bar.close_price, setup.low), do: append(setup, bar), else: setup
+  end
+
+  defp add_confirmation(setup, bar, _tag, _polarity), do: append(setup, bar)
+
+  defp append(%VSA.Setup{} = setup, bar) do
+    %VSA.Setup{setup | confirmations: [take_essential_bar_info(bar) | setup.confirmations]}
+  end
+
   defp take_essential_bar_info(bar) do
-    Map.take(bar, [:tag, :close_price, :volume, :time, :relative_volume, :relative_spread])
+    Map.take(bar, [
+      :tag,
+      :status,
+      :close_price,
+      :volume,
+      :time,
+      :relative_volume,
+      :relative_spread
+    ])
   end
 end

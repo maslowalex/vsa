@@ -425,7 +425,8 @@ defmodule VSA.ReversalIndicatorsTest do
 
       result = Vsa.Tag.confirm(bar_to_confirm, next_bar)
 
-      assert result.tag == nil
+      assert result.tag == :top_reversal
+      assert result.status == :unconfirmed
     end
 
     test "confirms bottom_reversal when next bar closes higher" do
@@ -503,7 +504,8 @@ defmodule VSA.ReversalIndicatorsTest do
 
       result = Vsa.Tag.confirm(bar_to_confirm, next_bar)
 
-      assert result.tag == nil
+      assert result.tag == :bottom_reversal
+      assert result.status == :unconfirmed
     end
   end
 end

@@ -1,38 +1,40 @@
 defmodule VSA.Bar do
   @moduledoc """
-  A data structure that represents individual price bar analyzed in the VSA terms.
-  The lowest-level unit of the system.
+  A single price bar analyzed in VSA terms — the lowest-level unit of the system.
 
-  Note, that there is no point in representing / encoding an individual bar
-  as in the VSA terms the core principle is the **relative** volume
-  meaning that the volume is matters **only** in relation to previous bars
+  In VSA only **relative** quantities matter: a bar's volume and spread are meaningful only
+  against the recent average, so a bar stores both the raw values and their classified
+  forms.
 
-  The properties of bar that we are interesting in is following:
-  - Time period over which bar was captured ** We need this value in order to sort the bars
+  ## Fields
 
-  - Close price
-  - Volume (the absolute amount of volume traded on that particular bar)
-  - Spread (absolute spread e.g. high - low)
+  Raw market data:
 
-  - Closed (bottom, middle or top of the actual bar)
-  - Direction (up, down or level)
-  - Relative Spread (tight, medium, wide)
-  - Relative Volume (ultra low, low, average, high, ultra high)
+    * `:time` — the bar's timestamp (used to order bars)
+    * `:high`, `:low`, `:close_price`, `:volume`
+    * `:spread` — absolute spread (`high - low`)
+    * `:finished` — whether the bar is closed
 
-  - Tag that we are assigning to that bar in VSA terms,
-    it could be one of following:
-      - PS (Potential professional selling). This tag is assigned to an UP bar with ultra-high relative volume and a wide spread
-        the next bar is must close **lower** than given bar. Background is up-trend.
-      - PB (Potential professional buying). This tag is assigned to a DOWN bar with ultra-high relative volume and a wide spread
-        the next bar is must close **higher** than given bar. Background is down-trend.
-      - Upthrust. This tag is assigned to a DOWN OR LEVEL bar with the high or ultra-high relative volume, the spread is tight.
-      - Shakeout. This tag is assigned to the UP OR LEVEL bar with the high or ultra-high relative volume, the spread is tight.
-      - No demand. This tag is assigned to the DOWN bar, the volume beign ultra-low and lower then previous two bars, with the medium to tight spread.
-      - Test. This tag is assigned to the UP bar, the volume of which is ultra-low and lower then previous two bars, with the medium to tight spread.
-      - Top reversal. This tag is a two-bar tag. The first bar is an UP bar that forms the new %Context{} "price_high" and closes on the high.
-        The second bar is a DOWN bar with the average to wide spread that closes on the low AND lower than the LOW of the first bar.
-      - Bottom reversal. This tag is a two-bar tag. The first bar is a DOWN bar that forms the new %Context{} "price_low" and closes on the low.
-        The second bar is an UP bar with the average to wide spread that closes on the high AND higher than the HIGH of the first bar.
+  Derived classifications (relative to the rolling means, or to the bar's own range):
+
+    * `:direction` — `:up | :down | :level` (close vs the previous close)
+    * `:relative_spread` — `:narrow | :average | :wide`
+    * `:relative_volume` — `:very_low | :low | :average | :high | :ultra_high`
+    * `:closed`, `:opened` — where close/open sit within the bar:
+      `:very_low | :low | :middle | :high | :very_high`
+
+  VSA classification and its provenance:
+
+    * `:tag` — the current effective principle, or `nil`. See `Vsa.Tag` for the catalogue.
+    * `:status` — `:pending | :assigned | :confirmed | :unconfirmed`
+    * `:tag_history` — append-only list of `VSA.TagEvent` (newest first). `:tag` and
+      `:status` are projections of its head, so the full classification history is retained.
+      Always write through `put_tag/4`; never set `:tag` directly.
+
+  Optional, caller-supplied market context (see `VSA.Level`):
+
+    * `:trend` — `:up | :down | :sideways` (refines trend-conditional principles)
+    * `:levels` — support/resistance levels that enable the location-dependent principles
   """
 
   @type t :: %__MODULE__{}
@@ -52,8 +54,27 @@ defmodule VSA.Bar do
     :tag,
     :closed,
     :opened,
-    :finished
+    :finished,
+    status: :pending,
+    tag_history: [],
+    trend: nil,
+    levels: []
   ]
+
+  @doc """
+  Sets the bar's current effective `tag` and `status`, appending the transition to
+  `tag_history` (newest-first).
+
+  This is the single writer of a bar's tag state: `tag`/`status` are always the
+  projection of the most recent `VSA.TagEvent`, so a classification is never
+  overwritten in place and the full provenance is preserved. `at` is the time of
+  the bar that caused the transition.
+  """
+  @spec put_tag(t(), atom(), VSA.TagEvent.status(), term()) :: t()
+  def put_tag(%__MODULE__{} = bar, tag, status, at) do
+    event = %VSA.TagEvent{tag: tag, status: status, at: at}
+    %{bar | tag: tag, status: status, tag_history: [event | bar.tag_history]}
+  end
 end
 
 defimpl String.Chars, for: VSA.Bar do
@@ -90,6 +111,7 @@ defimpl String.Chars, for: VSA.Bar do
       Relative volume: #{bar.relative_volume}
 
       Tag: #{tag}
+      Status: #{bar.status}
     >
     """
   end

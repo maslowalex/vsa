@@ -18,6 +18,10 @@ defmodule VSA.ThresholdsTest do
       assert D.eq?(thresholds.wide_spread_factor, D.new("1.5"))
       assert D.eq?(thresholds.narrow_spread_factor, D.new("0.7"))
       assert thresholds.bars_to_extreme_reset == 200
+      assert D.eq?(thresholds.climax_close_min_position, D.new("0.3"))
+      assert D.eq?(thresholds.buying_climax_close_max_position, D.new("0.7"))
+      assert D.eq?(thresholds.level_proximity_factor, D.new("0.5"))
+      assert D.eq?(thresholds.effort_volume_step, D.new("1.0"))
     end
   end
 
@@ -151,6 +155,36 @@ defmodule VSA.ThresholdsTest do
     end
   end
 
+  describe "validation - pattern factors" do
+    test "rejects climax_close_min_position outside (0, 1)" do
+      assert {:error, reasons} = Thresholds.new(climax_close_min_position: D.new("1"))
+      assert Enum.any?(reasons, &String.contains?(&1, "climax_close_min_position"))
+    end
+
+    test "rejects buying_climax_close_max_position outside (0, 1)" do
+      assert {:error, reasons} = Thresholds.new(buying_climax_close_max_position: D.new("0"))
+      assert Enum.any?(reasons, &String.contains?(&1, "buying_climax_close_max_position"))
+    end
+
+    test "rejects non-positive level_proximity_factor" do
+      assert {:error, reasons} = Thresholds.new(level_proximity_factor: D.new("0"))
+      assert Enum.any?(reasons, &String.contains?(&1, "level_proximity_factor"))
+    end
+
+    test "rejects non-positive effort_volume_step" do
+      assert {:error, reasons} = Thresholds.new(effort_volume_step: D.new("0"))
+      assert Enum.any?(reasons, &String.contains?(&1, "effort_volume_step"))
+    end
+
+    test "accepts overriding pattern factors (incl. string coercion)" do
+      {:ok, t} =
+        Thresholds.new(climax_close_min_position: D.new("0.4"), level_proximity_factor: "0.25")
+
+      assert D.eq?(t.climax_close_min_position, D.new("0.4"))
+      assert D.eq?(t.level_proximity_factor, D.new("0.25"))
+    end
+  end
+
   describe "new!/1" do
     test "raises on invalid thresholds" do
       assert_raise ArgumentError, ~r/Invalid thresholds/, fn ->
@@ -204,7 +238,11 @@ defmodule VSA.ThresholdsTest do
             vol_gap_2 <- float_between(0.1, 2.0),
             narrow_spread <- float_between(0.1, 0.9),
             wide_spread <- float_between(1.05, 3.0),
-            bars_reset <- StreamData.integer(1..500) do
+            bars_reset <- StreamData.integer(1..500),
+            climax_min <- float_between(0.05, 0.95),
+            buying_max <- float_between(0.05, 0.95),
+            proximity <- float_between(0.05, 3.0),
+            effort <- float_between(0.1, 3.0) do
       position_high = min(position_low + position_gap, 0.95)
       low_vol = min(very_low_vol + vol_gap_1, 0.95)
       ultra_high_vol = high_vol + vol_gap_2
@@ -218,7 +256,11 @@ defmodule VSA.ThresholdsTest do
         ultra_high_volume_factor: D.from_float(ultra_high_vol),
         narrow_spread_factor: D.from_float(narrow_spread),
         wide_spread_factor: D.from_float(wide_spread),
-        bars_to_extreme_reset: bars_reset
+        bars_to_extreme_reset: bars_reset,
+        climax_close_min_position: D.from_float(climax_min),
+        buying_climax_close_max_position: D.from_float(buying_max),
+        level_proximity_factor: D.from_float(proximity),
+        effort_volume_step: D.from_float(effort)
       }
     end
   end

@@ -18,6 +18,12 @@ defmodule VSA.Thresholds do
 
   Other:
     bars_to_extreme_reset > 0
+
+  Pattern factors (used by the extended VSA principles):
+    0 < climax_close_min_position < 1
+    0 < buying_climax_close_max_position < 1
+    level_proximity_factor > 0
+    effort_volume_step > 0
   """
 
   alias Decimal, as: D
@@ -26,15 +32,47 @@ defmodule VSA.Thresholds do
   @zero D.new(0)
 
   # Default values from application config or hardcoded defaults
-  @default_position_high_threshold Application.compile_env(:vsa, :position_high_threshold, D.new("0.7"))
-  @default_position_low_threshold Application.compile_env(:vsa, :position_low_threshold, D.new("0.3"))
-  @default_ultra_high_volume_factor Application.compile_env(:vsa, :ultra_high_volume_factor, D.new("2.0"))
+  @default_position_high_threshold Application.compile_env(
+                                     :vsa,
+                                     :position_high_threshold,
+                                     D.new("0.7")
+                                   )
+  @default_position_low_threshold Application.compile_env(
+                                    :vsa,
+                                    :position_low_threshold,
+                                    D.new("0.3")
+                                  )
+  @default_ultra_high_volume_factor Application.compile_env(
+                                      :vsa,
+                                      :ultra_high_volume_factor,
+                                      D.new("2.0")
+                                    )
   @default_high_volume_factor Application.compile_env(:vsa, :high_volume_factor, D.new("1.5"))
   @default_low_volume_factor Application.compile_env(:vsa, :low_volume_factor, D.new("0.5"))
-  @default_very_low_volume_factor Application.compile_env(:vsa, :very_low_volume_factor, D.new("0.25"))
+  @default_very_low_volume_factor Application.compile_env(
+                                    :vsa,
+                                    :very_low_volume_factor,
+                                    D.new("0.25")
+                                  )
   @default_wide_spread_factor Application.compile_env(:vsa, :wide_spread_factor, D.new("1.5"))
   @default_narrow_spread_factor Application.compile_env(:vsa, :narrow_spread_factor, D.new("0.7"))
   @default_bars_to_extreme_reset Application.compile_env(:vsa, :bars_to_extreme_reset, 200)
+  @default_climax_close_min_position Application.compile_env(
+                                       :vsa,
+                                       :climax_close_min_position,
+                                       D.new("0.3")
+                                     )
+  @default_buying_climax_close_max_position Application.compile_env(
+                                              :vsa,
+                                              :buying_climax_close_max_position,
+                                              D.new("0.7")
+                                            )
+  @default_level_proximity_factor Application.compile_env(
+                                    :vsa,
+                                    :level_proximity_factor,
+                                    D.new("0.5")
+                                  )
+  @default_effort_volume_step Application.compile_env(:vsa, :effort_volume_step, D.new("1.0"))
 
   @derive JSON.Encoder
   defstruct position_high_threshold: D.new("0.7"),
@@ -45,7 +83,11 @@ defmodule VSA.Thresholds do
             very_low_volume_factor: D.new("0.25"),
             wide_spread_factor: D.new("1.5"),
             narrow_spread_factor: D.new("0.7"),
-            bars_to_extreme_reset: 200
+            bars_to_extreme_reset: 200,
+            climax_close_min_position: D.new("0.3"),
+            buying_climax_close_max_position: D.new("0.7"),
+            level_proximity_factor: D.new("0.5"),
+            effort_volume_step: D.new("1.0")
 
   @type t :: %__MODULE__{
           position_high_threshold: Decimal.t(),
@@ -56,7 +98,11 @@ defmodule VSA.Thresholds do
           very_low_volume_factor: Decimal.t(),
           wide_spread_factor: Decimal.t(),
           narrow_spread_factor: Decimal.t(),
-          bars_to_extreme_reset: pos_integer()
+          bars_to_extreme_reset: pos_integer(),
+          climax_close_min_position: Decimal.t(),
+          buying_climax_close_max_position: Decimal.t(),
+          level_proximity_factor: Decimal.t(),
+          effort_volume_step: Decimal.t()
         }
 
   @doc """
@@ -116,6 +162,7 @@ defmodule VSA.Thresholds do
       |> validate_volume_factors(t)
       |> validate_spread_factors(t)
       |> validate_bars_to_extreme_reset(t)
+      |> validate_extension_factors(t)
 
     case errors do
       [] -> :ok
@@ -133,7 +180,11 @@ defmodule VSA.Thresholds do
       very_low_volume_factor: @default_very_low_volume_factor,
       wide_spread_factor: @default_wide_spread_factor,
       narrow_spread_factor: @default_narrow_spread_factor,
-      bars_to_extreme_reset: @default_bars_to_extreme_reset
+      bars_to_extreme_reset: @default_bars_to_extreme_reset,
+      climax_close_min_position: @default_climax_close_min_position,
+      buying_climax_close_max_position: @default_buying_climax_close_max_position,
+      level_proximity_factor: @default_level_proximity_factor,
+      effort_volume_step: @default_effort_volume_step
     }
 
     opts
@@ -237,6 +288,32 @@ defmodule VSA.Thresholds do
       errors,
       not (is_integer(bars) and bars > 0),
       "bars_to_extreme_reset (#{bars}) must be a positive integer"
+    )
+  end
+
+  # Pattern/location factors used by the extended detectors.
+  defp validate_extension_factors(errors, %{
+         climax_close_min_position: climax_min,
+         buying_climax_close_max_position: buying_max,
+         level_proximity_factor: proximity,
+         effort_volume_step: effort
+       }) do
+    errors
+    |> add_error_if(
+      not (D.gt?(climax_min, @zero) and D.lt?(climax_min, @one)),
+      "climax_close_min_position (#{climax_min}) must be between 0 and 1"
+    )
+    |> add_error_if(
+      not (D.gt?(buying_max, @zero) and D.lt?(buying_max, @one)),
+      "buying_climax_close_max_position (#{buying_max}) must be between 0 and 1"
+    )
+    |> add_error_if(
+      not D.gt?(proximity, @zero),
+      "level_proximity_factor (#{proximity}) must be greater than 0"
+    )
+    |> add_error_if(
+      not D.gt?(effort, @zero),
+      "effort_volume_step (#{effort}) must be greater than 0"
     )
   end
 

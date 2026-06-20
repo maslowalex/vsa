@@ -21,7 +21,8 @@ defmodule VSA.Context do
             price_low_set_bars_ago: 0,
             price_high_set_bars_ago: 0,
             setup: nil,
-            thresholds: %VSA.Thresholds{}
+            thresholds: %VSA.Thresholds{},
+            background: :neutral
 
   alias Decimal, as: D
   alias VSA.Context
@@ -29,6 +30,18 @@ defmodule VSA.Context do
   def maybe_capture_setup(%Context{} = context) do
     %{context | setup: VSA.Setup.capture(context)}
   end
+
+  @doc """
+  Derives the background regime (`:strength | :weakness | :neutral`) from the active
+  setup's principle. Used by detectors that are only valid with strength/weakness
+  "in the background" (e.g. No Supply). Trend itself is never computed here — it is
+  an injected, per-bar input (see `VSA.Bar` `:trend`).
+  """
+  def set_background(%Context{setup: %VSA.Setup{principle: principle}} = ctx) do
+    %{ctx | background: VSA.Setup.anchor_polarity(principle)}
+  end
+
+  def set_background(%Context{} = ctx), do: %{ctx | background: :neutral}
 
   def set_mean_vol(%Context{} = ctx, []), do: ctx
 

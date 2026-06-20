@@ -1,14 +1,24 @@
 defmodule Vsa.MixProject do
   use Mix.Project
 
+  @version "0.5.0"
+  @source_url "https://gitlab.com/maslo.rails/vsa"
+
   def project do
     [
       app: :vsa,
-      version: "0.4.0",
+      version: @version,
+      author: "Olexandr Maslo",
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      name: "VSA",
+      description:
+        "Volume Spread Analysis engine that annotates OHLCV bars with Tom Williams / " <>
+          "Tradeguider signs of strength and weakness.",
+      source_url: @source_url,
+      docs: docs()
     ]
   end
 
@@ -28,7 +38,22 @@ defmodule Vsa.MixProject do
     [
       {:decimal, "~> 2.1"},
       {:req, "~> 0.5.8", optional: true},
-      {:stream_data, "~> 1.0", only: :test}
+      {:stream_data, "~> 1.0", only: :test},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: ["README.md", "CHANGELOG.md"],
+      source_ref: "v#{@version}",
+      groups_for_modules: [
+        Core: [VSA, VSA.Context],
+        "Pattern detection": [Vsa.Tag, VSA.Setup],
+        "Data structures": [VSA.Bar, VSA.TagEvent, VSA.Level],
+        Configuration: [VSA.Thresholds]
+      ]
     ]
   end
 end

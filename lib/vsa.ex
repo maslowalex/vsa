@@ -1,6 +1,44 @@
 defmodule VSA do
   @moduledoc """
-  Core functions that reflect volume spread analysis methodology.
+  Volume Spread Analysis (VSA) — annotate a stream of OHLCV bars with Tom Williams /
+  Tradeguider "signs of strength" and "signs of weakness".
+
+  VSA reads the market through three quantities, always **relative** to recent history:
+  volume, spread (`high - low`), and where price closes within the bar. From these it infers
+  whether professional money is accumulating (strength) or distributing (weakness).
+
+  ## Pipeline
+
+      context = VSA.init(max_bars: 200, bars_to_mean: 20)
+      context = VSA.analyze(raw_bars, context)
+      # context.bars :: [%VSA.Bar{}], newest first
+
+  Each raw bar is a map with the required keys `:high`, `:low`, `:close`, `:volume`,
+  `:timestamp` (unix ms) and `:finished`, plus the optional `:open`. `analyze/2` folds the
+  bars through the pipeline, maintaining rolling means, price/volume extremes, the current
+  trade `VSA.Setup` and a `:background` regime on the `VSA.Context`.
+
+  ## The tag model
+
+  Every analyzed `VSA.Bar` carries a single effective `:tag` — a bar means one thing at a
+  time — but that classification is **provisional**: a following bar may confirm or deny it.
+  Rather than overwrite, each transition is appended to the bar's `:tag_history`
+  (`VSA.TagEvent` entries) and surfaced as `:status`. The catalogue of principles and how
+  they are detected lives in `Vsa.Tag`.
+
+  ## Injected market context
+
+  Trend and support/resistance are **not** computed here — they are the caller's concern.
+  A raw bar may carry an optional `:trend` (`:up | :down | :sideways`) and `:levels`
+  (a list of `%VSA.Level{}`); these unlock the location-dependent principles (absorption
+  volume, no demand at a top, wide-spread down through support). Bars without them are
+  analyzed normally; those principles simply do not fire.
+
+  ## Configuration
+
+  All classification cut-offs — volume, spread and position factors, plus the pattern
+  factors used by the extended principles — are configurable through `VSA.init/1` or
+  `VSA.Thresholds`.
   """
   alias VSA.Bar
   alias VSA.Context
@@ -79,7 +117,11 @@ defmodule VSA do
           :very_low_volume_factor,
           :wide_spread_factor,
           :narrow_spread_factor,
-          :bars_to_extreme_reset
+          :bars_to_extreme_reset,
+          :climax_close_min_position,
+          :buying_climax_close_max_position,
+          :level_proximity_factor,
+          :effort_volume_step
         ]
 
         threshold_opts = Keyword.take(configuration, threshold_keys)
@@ -114,6 +156,7 @@ defmodule VSA do
     |> Context.maybe_set_price_high_extreme()
     |> Context.maybe_set_price_low_extreme()
     |> Context.maybe_capture_setup()
+    |> Context.set_background()
   end
 
   def add_raw_bar(
@@ -172,7 +215,9 @@ defmodule VSA do
       relative_spread: relative_spread(ctx.mean_spread, absolute_spread, thresholds),
       relative_volume: relative_volume(ctx.mean_vol, raw_bar.volume, thresholds),
       tag: nil,
-      finished: raw_bar.finished
+      finished: raw_bar.finished,
+      trend: market_trend(raw_bar),
+      levels: market_levels(raw_bar)
     }
   end
 
@@ -183,8 +228,50 @@ defmodule VSA do
       time: DateTime.from_unix!(raw_bar.timestamp, :millisecond),
       close_price: raw_bar.close,
       volume: raw_bar.volume,
-      spread: absolute_spread(raw_bar)
+      spread: absolute_spread(raw_bar),
+      trend: market_trend(raw_bar),
+      levels: market_levels(raw_bar)
     }
+  end
+
+  # Optional, caller-supplied market context. The library never computes trend or
+  # support/resistance; it only accepts and validates them at this boundary so that
+  # location-dependent principles can use them. Absent values are fine.
+  defp market_trend(raw_bar) do
+    case Map.get(raw_bar, :trend) do
+      nil ->
+        nil
+
+      trend when trend in [:up, :down, :sideways] ->
+        trend
+
+      other ->
+        raise ArgumentError,
+              ":trend must be one of :up, :down, :sideways or absent, got: #{inspect(other)}"
+    end
+  end
+
+  defp market_levels(raw_bar) do
+    raw_bar
+    |> Map.get(:levels, [])
+    |> validate_levels!()
+  end
+
+  defp validate_levels!(levels) when is_list(levels) do
+    Enum.each(levels, fn
+      %VSA.Level{price: %Decimal{}, kind: kind} when kind in [:support, :resistance] ->
+        :ok
+
+      other ->
+        raise ArgumentError,
+              "each :levels entry must be a %VSA.Level{price: Decimal, kind: :support | :resistance}, got: #{inspect(other)}"
+    end)
+
+    levels
+  end
+
+  defp validate_levels!(other) do
+    raise ArgumentError, ":levels must be a list of %VSA.Level{}, got: #{inspect(other)}"
   end
 
   defp closed(abs_spread, _, _thresholds) when abs_spread == @zero, do: :middle

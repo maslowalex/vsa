@@ -81,8 +81,8 @@ defmodule VSA.Fixtures do
         :shakeout,
         :no_demand,
         :test,
-        :unconfirmed_test,
-        :unconfirmed_no_demand,
+        :stopping_volume,
+        :selling_climax,
         :upthrust,
         nil
       ])

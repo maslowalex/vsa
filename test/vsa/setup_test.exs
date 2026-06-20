@@ -104,7 +104,6 @@ defmodule VSA.SetupTest do
       } = VSA.Setup.capture(context)
     end
 
-    @tag :skip
     test "with professional_buying and unconfirmed no_demand above the high of setup - adds to confirmations" do
       setup = %VSA.Setup{
         principle: :professional_buying,
@@ -114,7 +113,8 @@ defmodule VSA.SetupTest do
       }
 
       unconfirmed_no_demand_bar = bar(%{
-        tag: :unconfirmed_no_demand,
+        tag: :no_demand,
+        status: :unconfirmed,
         close_price: Decimal.new("66005"),
         volume: Decimal.new("250")
       })
@@ -123,7 +123,7 @@ defmodule VSA.SetupTest do
 
       assert %VSA.Setup{
         principle: :professional_buying,
-        confirmations: [%{tag: :unconfirmed_no_demand}]
+        confirmations: [%{tag: :no_demand, status: :unconfirmed}]
       } = VSA.Setup.capture(context)
     end
 
@@ -190,7 +190,6 @@ defmodule VSA.SetupTest do
       } = VSA.Setup.capture(context)
     end
 
-    @tag :skip
     test "with professional_selling and unconfirmed test below the setup low - adds to confirmations" do
       setup = %VSA.Setup{
         principle: :professional_selling,
@@ -200,7 +199,8 @@ defmodule VSA.SetupTest do
       }
 
       unconfirmed_test_bar = bar(%{
-        tag: :unconfirmed_test,
+        tag: :test,
+        status: :unconfirmed,
         close_price: Decimal.new("61999"),
         volume: Decimal.new("250")
       })
@@ -209,8 +209,144 @@ defmodule VSA.SetupTest do
 
       assert %VSA.Setup{
         principle: :professional_selling,
-        confirmations: [%{tag: :unconfirmed_test}]
+        confirmations: [%{tag: :test, status: :unconfirmed}]
       } = VSA.Setup.capture(context)
+    end
+
+    test "with selling_climax - starts a strength setup, like professional_buying" do
+      %VSA.Context{bars: [bar | _]} = context = context_with_climactic_last_bar(tag: :selling_climax)
+
+      assert VSA.Setup.capture(context) == %VSA.Setup{
+        principle: :selling_climax,
+        volume: bar.volume,
+        high: bar.high,
+        low: bar.low,
+        close_price: bar.close_price,
+        inception_time: bar.time
+      }
+    end
+
+    test "with bag_holding - starts a strength setup" do
+      context = context_with_climactic_last_bar(tag: :bag_holding)
+
+      assert %VSA.Setup{principle: :bag_holding} = VSA.Setup.capture(context)
+    end
+
+    test "with buying_climax - starts a weakness setup" do
+      %VSA.Context{bars: [bar | _]} = context = context_with_climactic_last_bar(tag: :buying_climax)
+
+      assert VSA.Setup.capture(context) == %VSA.Setup{
+        principle: :buying_climax,
+        volume: bar.volume,
+        high: bar.high,
+        low: bar.low,
+        close_price: bar.close_price,
+        inception_time: bar.time
+      }
+    end
+
+    test "with end_of_rising_market - starts a weakness setup" do
+      context = context_with_climactic_last_bar(tag: :end_of_rising_market)
+
+      assert %VSA.Setup{principle: :end_of_rising_market} = VSA.Setup.capture(context)
+    end
+
+    test "strength setup + no_supply above the high - adds confirmation (penetration)" do
+      setup = %VSA.Setup{
+        principle: :selling_climax,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      no_supply_bar = bar(%{tag: :no_supply, close_price: Decimal.new("66005"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: setup, bars: [no_supply_bar])
+
+      assert %VSA.Setup{confirmations: [%{tag: :no_supply}]} = VSA.Setup.capture(context)
+    end
+
+    test "strength setup + no_supply inside the area - does not confirm (penetration)" do
+      setup = %VSA.Setup{
+        principle: :selling_climax,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      no_supply_bar = bar(%{tag: :no_supply, close_price: Decimal.new("64005"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: setup, bars: [no_supply_bar])
+
+      assert %VSA.Setup{confirmations: []} = VSA.Setup.capture(context)
+    end
+
+    test "strength setup + stopping_volume - confirms unconditionally" do
+      setup = %VSA.Setup{
+        principle: :professional_buying,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      bar = bar(%{tag: :stopping_volume, close_price: Decimal.new("63000"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: setup, bars: [bar])
+
+      assert %VSA.Setup{confirmations: [%{tag: :stopping_volume}]} = VSA.Setup.capture(context)
+    end
+
+    test "weakness setup + no_demand_at_top below the low - adds confirmation (penetration)" do
+      setup = %VSA.Setup{
+        principle: :buying_climax,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      bar = bar(%{tag: :no_demand_at_top, close_price: Decimal.new("61999"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: setup, bars: [bar])
+
+      assert %VSA.Setup{confirmations: [%{tag: :no_demand_at_top}]} = VSA.Setup.capture(context)
+    end
+
+    test "weakness setup + churning - confirms unconditionally" do
+      setup = %VSA.Setup{
+        principle: :professional_selling,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      bar = bar(%{tag: :churning, close_price: Decimal.new("64000"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: setup, bars: [bar])
+
+      assert %VSA.Setup{confirmations: [%{tag: :churning}]} = VSA.Setup.capture(context)
+    end
+
+    test "polarity mismatch - a weakness confirmation against a strength setup is ignored" do
+      setup = %VSA.Setup{
+        principle: :selling_climax,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      bar = bar(%{tag: :churning, close_price: Decimal.new("64000"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: setup, bars: [bar])
+
+      assert %VSA.Setup{confirmations: []} = VSA.Setup.capture(context)
+    end
+
+    test "regime flip - a buying_climax during a strength setup replaces it with a weakness setup" do
+      strength_setup = %VSA.Setup{
+        principle: :selling_climax,
+        high: Decimal.new("66000"),
+        low: Decimal.new("62000"),
+        confirmations: []
+      }
+
+      buying_climax_bar = bar(%{tag: :buying_climax, close_price: Decimal.new("70000"), volume: Decimal.new("250")})
+      context = context_with_setup(setup: strength_setup, bars: [buying_climax_bar])
+
+      assert %VSA.Setup{principle: :buying_climax, confirmations: []} = VSA.Setup.capture(context)
     end
   end
 end
