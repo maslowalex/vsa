@@ -46,8 +46,6 @@ defmodule VSA do
   alias Decimal, as: D
   alias VSA.Thresholds
 
-  @zero D.new(0)
-
   @doc """
   Initialize a new context for volume spread analysis.
 
@@ -274,7 +272,10 @@ defmodule VSA do
     raise ArgumentError, ":levels must be a list of %VSA.Level{}, got: #{inspect(other)}"
   end
 
-  defp closed(abs_spread, _, _thresholds) when abs_spread == @zero, do: :middle
+  # Zero guards pattern-match `%D{coef: 0}` (zero at any exponent): exchange
+  # feeds encode zero as "0.00"/"0E-8", which is structurally different from
+  # `D.new(0)`, so a `== @zero` guard lets it through to a 0/0 division.
+  defp closed(%D{coef: 0}, _, _thresholds), do: :middle
   defp closed(_, %{close: c, low: l}, _thresholds) when c == l, do: :very_low
   defp closed(_, %{high: h, close: c}, _thresholds) when c == h, do: :very_high
 
@@ -288,7 +289,7 @@ defmodule VSA do
     end
   end
 
-  defp opened(abs_spread, _, _thresholds) when abs_spread == @zero, do: :middle
+  defp opened(%D{coef: 0}, _, _thresholds), do: :middle
   defp opened(_, raw_bar, _thresholds) when not is_map_key(raw_bar, :open), do: :middle
   defp opened(_, %{open: o, low: l}, _thresholds) when o == l, do: :very_low
   defp opened(_, %{high: h, open: o}, _thresholds) when o == h, do: :very_high
@@ -315,8 +316,8 @@ defmodule VSA do
     D.sub(h, l)
   end
 
-  defp relative_spread(mean_spread, _, _thresholds) when mean_spread == @zero, do: :narrow
-  defp relative_spread(_, spread, _thresholds) when spread == @zero, do: :narrow
+  defp relative_spread(%D{coef: 0}, _, _thresholds), do: :narrow
+  defp relative_spread(_, %D{coef: 0}, _thresholds), do: :narrow
 
   defp relative_spread(mean_spread, spread, %Thresholds{} = thresholds) do
     cond do
@@ -331,8 +332,8 @@ defmodule VSA do
     end
   end
 
-  defp relative_volume(_, volume, _thresholds) when volume == @zero, do: :very_low
-  defp relative_volume(mean_volume, _, _thresholds) when mean_volume == @zero, do: :average
+  defp relative_volume(_, %D{coef: 0}, _thresholds), do: :very_low
+  defp relative_volume(%D{coef: 0}, _, _thresholds), do: :average
 
   defp relative_volume(mean_volume, volume, %Thresholds{} = thresholds) do
     ratio = D.div(volume, mean_volume)

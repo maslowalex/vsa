@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1]
+
+### Fixed
+
+- **0/0 crash on non-canonical Decimal zeros.** The zero guards in
+  `closed/3`, `opened/3`, `relative_spread/3` and `relative_volume/3` compared
+  structurally (`value == Decimal.new(0)`), so exchange-encoded zeros like
+  `"0.00"`/`"0E-8"` (coef 0, non-zero exponent) slipped through to a
+  `Decimal.div/2` `invalid_operation: 0 / 0` — hit in practice by thin listings
+  with zero-volume daily bars. Guards now pattern-match `%Decimal{coef: 0}`
+  (semantic zero at any exponent).
+
 ## [0.5.0]
 
 Adds the majority of the Tradeguider _Signs of Strength / Signs of Weakness_ principles,
