@@ -36,8 +36,8 @@ defmodule Vsa.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:decimal, "~> 2.1"},
-      {:req, "~> 0.5.8", optional: true},
+      {:decimal, "~> 2.1 or ~> 3.0"},
+      {:req, "~> 0.5 or ~> 0.6", optional: true},
       {:stream_data, "~> 1.0", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
